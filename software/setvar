@@ -1,2 +1,2 @@
 export PILOTPORT=/dev/ttyUSB0
-export PILOTRATE=115200
+export PILOTRATE=19200

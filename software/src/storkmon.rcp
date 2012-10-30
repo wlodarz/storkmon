@@ -34,3 +34,43 @@ BEGIN
 	MESSAGE "Weather conditions monitoring"
 	BUTTONS "Ok"
 END
+
+ALERT ID alertID_serial1
+INFORMATION
+BEGIN
+	TITLE "Serial Alert"
+	MESSAGE "Serial 1"
+	BUTTONS "Ok"
+END
+
+ALERT ID alertID_serial2
+INFORMATION
+BEGIN
+	TITLE "Serial Alert"
+	MESSAGE "Serial 2"
+	BUTTONS "Ok"
+END
+
+ALERT ID alertID_serial3
+INFORMATION
+BEGIN
+	TITLE "Serial Alert"
+	MESSAGE "Serial 3"
+	BUTTONS "Ok"
+END
+
+ALERT ID alertID_serial4
+INFORMATION
+BEGIN
+	TITLE "Serial Alert"
+	MESSAGE "Serial 4"
+	BUTTONS "Ok"
+END
+
+ALERT ID alertID_serial5
+INFORMATION
+BEGIN
+	TITLE "Serial Alert"
+	MESSAGE "Serial 5"
+	BUTTONS "Ok"
+END
