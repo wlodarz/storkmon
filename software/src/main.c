@@ -85,7 +85,7 @@ static void EventLoop(void) {
 
 	do {
 		//EvtGetEvent(&event, -1);
-		EvtGetEvent(&event, 50);
+		EvtGetEvent(&event, 100);
 
 		if(SysHandleEvent(&event)) continue;
 		if(MenuHandleEvent((void *)0, &event, &err)) continue;

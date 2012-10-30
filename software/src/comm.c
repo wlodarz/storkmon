@@ -4,6 +4,7 @@
 #include "comm.h"
 
 #define MSG_MAX_SIZE 32
+#define SERIAL_PORT_SPEED 19200
 
 static const char *zigbee_bcast_msg = "AT+BCAST:00,";
 
@@ -21,7 +22,7 @@ int comm_init(void)
 	Err err;
 	comm_st.initialized = 1;
 
-	err = SrmOpen(serPortCradleRS232Port, 57600, &comm_st.portid);
+	err = SrmOpen(serPortCradleRS232Port, SERIAL_PORT_SPEED, &comm_st.portid);
 	ErrNonFatalDisplayIf(err == serErrBadPort, "serErrBadPort");
 
 	switch(err) {
@@ -75,7 +76,7 @@ static int comm_send_message(const char *msg)
 
 	if (strlen(msg) > (MSG_MAX_SIZE - 1 - strlen(zigbee_bcast_msg))) return -1;
 
-	sprintf(buffer, "%s%s", zigbee_bcast_msg, msg);
+	sprintf(buffer, "%s%s\r", zigbee_bcast_msg, msg);
 	comm_serial_send(buffer, strlen(buffer));
 
 	return 0;
