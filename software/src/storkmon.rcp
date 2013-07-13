@@ -74,3 +74,11 @@ BEGIN
 	MESSAGE "Serial 5"
 	BUTTONS "Ok"
 END
+
+ALERT ID alertID_debug
+INFORMATION
+BEGIN
+	TITLE "Debug Alert"
+	MESSAGE "Debug: ^1 ^2 ^3"
+	BUTTONS "Ok"
+END

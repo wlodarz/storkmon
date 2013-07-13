@@ -12,7 +12,7 @@ $(PROJ).prc: code0001.$(PROJ).grc tfrm03e8.bin
 	build-prc $(PROJ).prc "StorkMon" ReCh *.grc *.bin
 	ls -l *.prc
 
-$(PROJ):    obj/main.o obj/draw.o obj/comm.o
+$(PROJ):    obj/main.o obj/draw.o obj/comm.o obj/zbparse.o
 	$(CC) $^ -o $@
 
 code0001.$(PROJ).grc: $(PROJ)
@@ -24,6 +24,9 @@ obj/draw.o:  src/draw.c
 obj/comm.o:  src/comm.c
 	$(CC) -c $< -o $@ $(CFLAGS)
 
+obj/zbparse.o:  src/zbparse.c
+	$(CC) -c $< -o $@ $(CFLAGS)
+
 obj/main.o:  src/main.c
 	$(CC) -c $< -o $@ $(CFLAGS)
 
@@ -31,8 +34,13 @@ tfrm03e8.bin: src/$(PROJ).rcp include/$(PROJ).h src/$(PROJ).txt
 	txt2bitm src/$(PROJ).txt
 	pilrc src/$(PROJ).rcp
 
+test:	test/t
+
+test/t:
+	gcc -o test/t test/main.c src/zbparse.c -Iinclude
+
 clean:
-	rm -f obj/* *.grc *.bin *.bmp $(PROJ).prc
+	rm -f obj/* *.grc *.bin *.bmp $(PROJ).prc test/t
 
 mrproper: clean
 	rm -f $(PROJ)

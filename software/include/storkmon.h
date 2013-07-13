@@ -14,3 +14,4 @@
 #define alertID_serial3			2013
 #define alertID_serial4			2014
 #define alertID_serial5			2015
+#define alertID_debug			2016

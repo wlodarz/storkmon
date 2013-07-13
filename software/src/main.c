@@ -72,6 +72,9 @@ static int StartApplication(void) {
 	/* initialize display module */
 	draw_init();
 
+	/* initialize ZigBee parser module */
+	zbparser_init();
+
 	FrmGotoForm(formID_stork);
 }
 
@@ -91,6 +94,11 @@ static void EventLoop(void) {
 		if(MenuHandleEvent((void *)0, &event, &err)) continue;
 
 		// perform action every timeout
+		ret = comm_request_data();
+		if (ret != 0) {
+			// error in communication - report it
+			// TODO: report problem
+		}
 		ret = comm_read_data(&temp, &windspeed);
 		if (ret != 0) {
 			// error in communication - report it
@@ -100,11 +108,6 @@ static void EventLoop(void) {
 			draw_addval_temp(temp);
 			draw_addval_wind(windspeed);
 			draw_update();
-		}
-		ret = comm_request_data();
-		if (ret != 0) {
-			// error in communication - report it
-			// TODO: report problem
 		}
 
 		if(event.eType == frmLoadEvent) {
