@@ -46,6 +46,7 @@ static Boolean storkHandler(EventPtr event) {
 				case menuitemID_quit:
 					quit = 1;
 					break;
+
 			}
 			handled = 1;
 			break;
@@ -85,29 +86,45 @@ static void EventLoop(void) {
 	EventType event;
 	int ret;
 	int temp, windspeed;
+	int timeout_counter = 0;
+	int draw_enable = 0;
 
 	do {
 		//EvtGetEvent(&event, -1);
-		EvtGetEvent(&event, 100);
+		EvtGetEvent(&event, 5);
 
 		if(SysHandleEvent(&event)) continue;
 		if(MenuHandleEvent((void *)0, &event, &err)) continue;
 
-		// perform action every timeout
-		ret = comm_request_data();
-		if (ret != 0) {
-			// error in communication - report it
-			// TODO: report problem
+		if (timeout_counter == 0) {
+			// perform action every timeout
+			ret = comm_request_data();
+			if (ret != 0) {
+				// error in communication - report it
+				// TODO: report problem
+			}
 		}
+
 		ret = comm_read_data(&temp, &windspeed);
 		if (ret != 0) {
 			// error in communication - report it
 			// TODO: report problem
+			temp = 0;
+			windspeed = 0;
 		} else {
+			if (temp > 40) temp = 40;
+			if (windspeed > 40) windspeed = 40;
+			draw_enable = 1;
+		}
+		
+		if (timeout_counter == 7 || draw_enable == 1) {
 			// add points and draw them
 			draw_addval_temp(temp);
 			draw_addval_wind(windspeed);
 			draw_update();
+			draw_enable = 0;
+
+			comm_reset_buffer();
 		}
 
 		if(event.eType == frmLoadEvent) {
@@ -122,6 +139,7 @@ static void EventLoop(void) {
 			}
 		}
 		FrmDispatchEvent(&event);
+		timeout_counter = (timeout_counter+1)%8;
 	} while(event.eType != appStopEvent && !quit);
 }
 

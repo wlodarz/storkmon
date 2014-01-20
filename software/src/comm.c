@@ -12,6 +12,8 @@ static const char *zigbee_bcast_msg = "AT+BCAST:00,";
 struct comm_state {
 	int initialized;
 	unsigned short int portid;
+	unsigned int msglen;
+	char message[MSG_MAX_SIZE];
 };
 
 static struct comm_state comm_st;
@@ -22,6 +24,8 @@ int comm_init(void)
 {
 	Err err;
 	comm_st.initialized = 1;
+	comm_st.message[0] = '\0';
+	comm_st.msglen = 0;
 
 	err = SrmOpen(serPortCradleRS232Port, SERIAL_PORT_SPEED, &comm_st.portid);
 	ErrNonFatalDisplayIf(err == serErrBadPort, "serErrBadPort");
@@ -102,8 +106,7 @@ int comm_request_data(void)
  */
 int comm_read_data(int *temp, int *windspeed)
 {
-	char msg[256];
-	int bytes=sizeof(msg), eol=0;
+	int eol=0;
 	int timeout = 4, i, len;
 	Err error;
 
@@ -111,12 +114,13 @@ int comm_read_data(int *temp, int *windspeed)
 	*windspeed = 15;
 	/* try to read one line */
 	i=0;
-	while(bytes > 0 && !eol && timeout > 0) {
-		SrmReceive(comm_st.portid, &msg[i], 1, 100, &error);
+	while(comm_st.msglen < MSG_MAX_SIZE && !eol && timeout > 0) {
+		SrmReceive(comm_st.portid, &comm_st.message[comm_st.msglen], 1, 5, &error);
 		if (!error) {
-			bytes -= 1;
-			if (msg[i] == chrCarriageReturn || msg[i] == chrLineFeed) { eol = 1; msg[i] = '\0'; }
-			i++;
+			if (comm_st.message[comm_st.msglen] == chrCarriageReturn || comm_st.message[comm_st.msglen] == chrLineFeed) { 
+				eol = 1; comm_st.message[comm_st.msglen] = '\0';
+		}
+			comm_st.msglen++;
 		} else {
 			timeout--;
 			SrmReceiveFlush(comm_st.portid, 1);
@@ -128,14 +132,14 @@ int comm_read_data(int *temp, int *windspeed)
 	if (timeout > 0) {
 
 		/* find temperature string */
-		char *tstr = StrStr(msg, "temp");
-		char *wstr = StrStr(msg, "wind");
+		char *tstr = StrStr(comm_st.message, "temp");
+		char *wstr = StrStr(comm_st.message, "wind");
 		*temp = 10;
 		*windspeed = 11;
 		if (tstr && wstr) {
 			*temp = (tstr[5] - '0')  * 1000 + (tstr[6] - '0') * 100 + (tstr[8] - '0') * 10 + (tstr[9] - '0');
 			*windspeed = (wstr[5] - '0') * 1000 + (wstr[6] - '0') * 100 + (wstr[8] - '0') * 10 + (wstr[9] - '0');
-			FrmCustomAlert(alertID_debug, msg, NULL, NULL);
+			//FrmCustomAlert(alertID_debug, comm_st.message, NULL, NULL);
 		}
 	} else {
 		*temp = 13;
@@ -153,4 +157,9 @@ int comm_samples_available(void)
 	return 0;
 }
 
+void comm_reset_buffer(void)
+{
+	comm_st.message[0] = '\0';
+	comm_st.msglen = 0;
+}
 

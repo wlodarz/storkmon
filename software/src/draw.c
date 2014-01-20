@@ -63,13 +63,13 @@ void draw_update(void)
 	// first clean last drawing, both: temperature and windspeed
 	for(x=0; x<DISPLAY_WINDOW_WIDTH; x++) {
 		WinErasePixel(x+ELEM_POS_TEMP_GRAPH_X, 
-			     draw_st.temperature_table[(x+draw_st.start_index)%DISPLAY_WINDOW_WIDTH] + ELEM_POS_TEMP_GRAPH_Y);
+			     DISPLAY_WINDOW_HEIGHT - draw_st.temperature_table[(x+draw_st.start_index)%DISPLAY_WINDOW_WIDTH] - ELEM_POS_TEMP_GRAPH_Y);
 		WinErasePixel(x+ELEM_POS_WIND_GRAPH_X, 
-			     draw_st.windspeed_table[(x+draw_st.start_index)%DISPLAY_WINDOW_WIDTH] + ELEM_POS_WIND_GRAPH_Y);
+			     DISPLAY_WINDOW_HEIGHT - draw_st.windspeed_table[(x+draw_st.start_index)%DISPLAY_WINDOW_WIDTH] - ELEM_POS_WIND_GRAPH_Y);
 	}
 	// clean also last numeric values
-	WinEraseChars(draw_st.temperature_string, strlen(draw_st.temperature_string), ELEM_POS_TEMP_NUM_X, ELEM_POS_TEMP_NUM_Y);
-	WinEraseChars(draw_st.windspeed_string, strlen(draw_st.temperature_string), ELEM_POS_WIND_NUM_X, ELEM_POS_WIND_NUM_Y);
+	WinEraseChars(draw_st.temperature_string, strlen(draw_st.temperature_string), ELEM_POS_TEMP_NUM_X, DISPLAY_WINDOW_HEIGHT - ELEM_POS_TEMP_NUM_Y);
+	WinEraseChars(draw_st.windspeed_string, strlen(draw_st.temperature_string), ELEM_POS_WIND_NUM_X, DISPLAY_WINDOW_HEIGHT - ELEM_POS_WIND_NUM_Y);
 
 	// add new values
 	draw_st.temperature_table[(x+draw_st.start_index)%DISPLAY_WINDOW_WIDTH] = draw_st.new_temp;
@@ -81,14 +81,14 @@ void draw_update(void)
 	// now draw new drawing, both: temperature and windspeed
 	for(x=0; x<DISPLAY_WINDOW_WIDTH; x++) {
 		WinDrawPixel(x+ELEM_POS_TEMP_GRAPH_X, 
-			     draw_st.temperature_table[(x+draw_st.start_index)%DISPLAY_WINDOW_WIDTH] + ELEM_POS_TEMP_GRAPH_Y);
+			     DISPLAY_WINDOW_HEIGHT - draw_st.temperature_table[(x+draw_st.start_index)%DISPLAY_WINDOW_WIDTH] - ELEM_POS_TEMP_GRAPH_Y);
 		WinDrawPixel(x+ELEM_POS_WIND_GRAPH_X, 
-			     draw_st.windspeed_table[(x+draw_st.start_index)%DISPLAY_WINDOW_WIDTH] + ELEM_POS_WIND_GRAPH_Y);
+			     DISPLAY_WINDOW_HEIGHT - draw_st.windspeed_table[(x+draw_st.start_index)%DISPLAY_WINDOW_WIDTH] - ELEM_POS_WIND_GRAPH_Y);
 	}
 	// draw also new numeric values
 	sprintf(draw_st.temperature_string, "%03d", draw_st.new_temp);
 	sprintf(draw_st.windspeed_string, "%03d", draw_st.new_windspeed);
-	WinDrawChars(draw_st.temperature_string, strlen(draw_st.temperature_string), ELEM_POS_TEMP_NUM_X, ELEM_POS_TEMP_NUM_Y);
-	WinDrawChars(draw_st.windspeed_string, strlen(draw_st.temperature_string), ELEM_POS_WIND_NUM_X, ELEM_POS_WIND_NUM_Y);
+	WinDrawChars(draw_st.temperature_string, strlen(draw_st.temperature_string), ELEM_POS_TEMP_NUM_X, DISPLAY_WINDOW_HEIGHT - ELEM_POS_TEMP_NUM_Y);
+	WinDrawChars(draw_st.windspeed_string, strlen(draw_st.temperature_string), ELEM_POS_WIND_NUM_X, DISPLAY_WINDOW_HEIGHT - ELEM_POS_WIND_NUM_Y);
 }
 

@@ -18,4 +18,6 @@ int comm_request_data(void);
  */
 int comm_read_data(int *temp, int *windspeed);
 
+void comm_reset_buffer(void);
+
 #endif // __STORKMON_COMM_H_
