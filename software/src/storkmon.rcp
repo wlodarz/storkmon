@@ -35,46 +35,6 @@ BEGIN
 	BUTTONS "Ok"
 END
 
-ALERT ID alertID_serial1
-INFORMATION
-BEGIN
-	TITLE "Serial Alert"
-	MESSAGE "Serial 1"
-	BUTTONS "Ok"
-END
-
-ALERT ID alertID_serial2
-INFORMATION
-BEGIN
-	TITLE "Serial Alert"
-	MESSAGE "Serial 2"
-	BUTTONS "Ok"
-END
-
-ALERT ID alertID_serial3
-INFORMATION
-BEGIN
-	TITLE "Serial Alert"
-	MESSAGE "Serial 3"
-	BUTTONS "Ok"
-END
-
-ALERT ID alertID_serial4
-INFORMATION
-BEGIN
-	TITLE "Serial Alert"
-	MESSAGE "Serial 4"
-	BUTTONS "Ok"
-END
-
-ALERT ID alertID_serial5
-INFORMATION
-BEGIN
-	TITLE "Serial Alert"
-	MESSAGE "Serial 5"
-	BUTTONS "Ok"
-END
-
 ALERT ID alertID_debug
 INFORMATION
 BEGIN
@@ -82,3 +42,68 @@ BEGIN
 	MESSAGE "Debug: ^1 ^2 ^3"
 	BUTTONS "Ok"
 END
+
+ALERT ID alertID_pendown
+INFORMATION
+BEGIN
+	TITLE "Pen Down"
+	MESSAGE "PENDOWN"
+	BUTTONS "Ok"
+END
+
+ALERT ID alertID_up
+INFORMATION
+BEGIN
+	TITLE "Pen Down"
+	MESSAGE "UP"
+	BUTTONS "Ok"
+END
+
+ALERT ID alertID_down
+INFORMATION
+BEGIN
+	TITLE "Pen Down"
+	MESSAGE "DOWN"
+	BUTTONS "Ok"
+END
+
+ALERT ID alertID_serial_opened
+INFORMATION
+BEGIN
+	TITLE "Serial Opened"
+	MESSAGE "SerialOpened"
+	BUTTONS "Ok"
+END
+
+ALERT ID alertID_hard1
+INFORMATION
+BEGIN
+	TITLE "Hardware1"
+	MESSAGE "Hardware1"
+	BUTTONS "Ok"
+END
+
+ALERT ID alertID_hard2
+INFORMATION
+BEGIN
+	TITLE "Hardware2"
+	MESSAGE "Hardware2"
+	BUTTONS "Ok"
+END
+
+ALERT ID alertID_hard3
+INFORMATION
+BEGIN
+	TITLE "Hardware3"
+	MESSAGE "Hardware3"
+	BUTTONS "Ok"
+END
+
+ALERT ID alertID_hard4
+INFORMATION
+BEGIN
+	TITLE "Hardware4"
+	MESSAGE "Hardware4"
+	BUTTONS "Ok"
+END
+

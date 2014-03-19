@@ -9,9 +9,12 @@
 #define menuitemID_about		2008
 
 #define alertID_about			2010
-#define alertID_serial1			2011
-#define alertID_serial2			2012
-#define alertID_serial3			2013
-#define alertID_serial4			2014
-#define alertID_serial5			2015
-#define alertID_debug			2016
+#define alertID_pendown			2011
+#define alertID_up			2012
+#define alertID_down			2013
+#define alertID_debug			2014
+#define alertID_serial_opened		2015
+#define alertID_hard1			2016
+#define alertID_hard2			2017
+#define alertID_hard3			2018
+#define alertID_hard4			2019

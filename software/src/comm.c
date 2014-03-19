@@ -37,10 +37,10 @@ int comm_init(void)
 			//FrmAlert(alertID_serial1);
 			break;
 		case serErrAlreadyOpen:
-			FrmAlert(alertID_serial2);
+			FrmAlert(alertID_serial_opened);
 			break;
 		default:
-			FrmAlert(alertID_serial3);
+			//FrmAlert(alertID_serial3);
 			break;
 	}
 	
@@ -57,8 +57,8 @@ int comm_destroy(void)
 
 	err = SrmSendWait(comm_st.portid);
 	ErrNonFatalDisplayIf(err == serErrBadPort, "SrmClose: bad port");
-	if (err == serErrTimeOut)
-		FrmAlert(alertID_serial4);
+	//if (err == serErrTimeOut)
+	//	FrmAlert(alertID_serial4);
 
 	SrmClose(comm_st.portid);
 	
@@ -72,7 +72,7 @@ static int comm_serial_send(const char *msg, int len)
 	Err err;
 
 	SrmSend(comm_st.portid, msg, len, &err);
-	if (err) FrmAlert(alertID_serial5);
+	//if (err) FrmAlert(alertID_serial5);
 }
 
 /* send message to serial, should be packet into AT+BCAST message

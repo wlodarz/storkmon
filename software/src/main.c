@@ -50,9 +50,48 @@ static Boolean storkHandler(EventPtr event) {
 			}
 			handled = 1;
 			break;
+		case penDownEvent:
+			handled = 1;
+			FrmAlert(alertID_pendown);
+			break;
 		case nilEvent:
 			handled = 1;
 			break;
+	}
+	return handled;
+}
+
+static Boolean hardwareButtonsHandler(EventPtr event) {
+	int handled = 0;
+
+	if(event->eType == keyDownEvent) {
+		switch(event->data.keyDown.chr) {
+			case vchrPageUp:
+				handled = 1;
+				//FrmAlert(alertID_up);
+				draw_inc_limit();
+				break;
+			case vchrPageDown:
+				handled = 1;
+				draw_dec_limit();
+				break;
+			case vchrHard1:
+				handled = 1;
+				draw_select_limit(LIMIT_WIND_MIN);
+				break;
+			case vchrHard2:
+				handled = 1;
+				draw_select_limit(LIMIT_WIND_MAX);
+				break;
+			case vchrHard3:
+				handled = 1;
+				draw_select_limit(LIMIT_TEMP_MIN);
+				break;
+			case vchrHard4:
+				handled = 1;
+				draw_select_limit(LIMIT_TEMP_MAX);
+				break;
+		}
 	}
 	return handled;
 }
@@ -91,12 +130,13 @@ static void EventLoop(void) {
 
 	do {
 		//EvtGetEvent(&event, -1);
-		EvtGetEvent(&event, 100);
+		EvtGetEvent(&event, 50);
 
+		if(hardwareButtonsHandler(&event)) continue;
 		if(SysHandleEvent(&event)) continue;
 		if(MenuHandleEvent((void *)0, &event, &err)) continue;
 
-		if (timeout_counter == 0) {
+		if (event.eType == nilEvent) {
 			// perform action every timeout
 			ret = comm_request_data();
 			//ret = comm_request_info();
@@ -104,24 +144,23 @@ static void EventLoop(void) {
 				// error in communication - report it
 				// TODO: report problem
 			}
-		}
 
-		ret = comm_read_data(&temp, &windspeed);
-		if (ret != 0) {
-			// error in communication - report it
-			// TODO: report problem
-			temp = 0;
-			windspeed = 0;
-			draw_enable = 0;
-		} else {
-			//temp /= 100;
-			//windspeed /= 100;
-			if (temp > 9000) temp = 9000;
-			if (windspeed > 9000) windspeed = 9000;
-			draw_enable = 1;
+			ret = comm_read_data(&temp, &windspeed);
+			if (ret != 0) {
+				// error in communication - report it
+				// TODO: report problem
+				temp = 0;
+				windspeed = 0;
+				draw_enable = 0;
+			} else {
+				if (temp > 9000) temp = 9000;
+				if (windspeed > 9000) windspeed = 9000;
+				draw_enable = 1;
+			}
+
+			draw_deselect_limit();
 		}
 		
-		//if (timeout_counter == 7 || draw_enable == 1) {
 		if (draw_enable == 1) {
 			// add points and draw them
 			draw_addval_temp(temp);
