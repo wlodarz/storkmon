@@ -91,7 +91,7 @@ static void EventLoop(void) {
 
 	do {
 		//EvtGetEvent(&event, -1);
-		EvtGetEvent(&event, 5);
+		EvtGetEvent(&event, 100);
 
 		if(SysHandleEvent(&event)) continue;
 		if(MenuHandleEvent((void *)0, &event, &err)) continue;
@@ -99,6 +99,7 @@ static void EventLoop(void) {
 		if (timeout_counter == 0) {
 			// perform action every timeout
 			ret = comm_request_data();
+			//ret = comm_request_info();
 			if (ret != 0) {
 				// error in communication - report it
 				// TODO: report problem
@@ -111,13 +112,17 @@ static void EventLoop(void) {
 			// TODO: report problem
 			temp = 0;
 			windspeed = 0;
+			draw_enable = 0;
 		} else {
-			if (temp > 40) temp = 40;
-			if (windspeed > 40) windspeed = 40;
+			//temp /= 100;
+			//windspeed /= 100;
+			if (temp > 9000) temp = 9000;
+			if (windspeed > 9000) windspeed = 9000;
 			draw_enable = 1;
 		}
 		
-		if (timeout_counter == 7 || draw_enable == 1) {
+		//if (timeout_counter == 7 || draw_enable == 1) {
+		if (draw_enable == 1) {
 			// add points and draw them
 			draw_addval_temp(temp);
 			draw_addval_wind(windspeed);
@@ -139,7 +144,7 @@ static void EventLoop(void) {
 			}
 		}
 		FrmDispatchEvent(&event);
-		timeout_counter = (timeout_counter+1)%8;
+		//timeout_counter = (timeout_counter+1)%2;
 	} while(event.eType != appStopEvent && !quit);
 }
 
