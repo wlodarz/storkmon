@@ -76,20 +76,20 @@ static Boolean hardwareButtonsHandler(EventPtr event) {
 				draw_dec_limit();
 				break;
 			case vchrHard1:
+				draw_select_limit(LIMIT_TEMP_MAX);
 				handled = 1;
-				draw_select_limit(LIMIT_WIND_MIN);
 				break;
 			case vchrHard2:
+				draw_select_limit(LIMIT_TEMP_MIN);
 				handled = 1;
-				draw_select_limit(LIMIT_WIND_MAX);
 				break;
 			case vchrHard3:
+				draw_select_limit(LIMIT_WIND_MAX);
 				handled = 1;
-				draw_select_limit(LIMIT_TEMP_MIN);
 				break;
 			case vchrHard4:
+				draw_select_limit(LIMIT_WIND_MIN);
 				handled = 1;
-				draw_select_limit(LIMIT_TEMP_MAX);
 				break;
 		}
 	}

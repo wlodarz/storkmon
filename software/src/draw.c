@@ -132,9 +132,10 @@ void draw_update(void)
 	draw_constant();
 
 	if (!draw_st.first_temp_set) {
-		draw_st.limit_temp_min = (draw_st.new_temp > 100) ? (draw_st.new_temp - 100) : 0;
+		UInt32 new_temp = (draw_st.new_temp / 100) * 100;
+		draw_st.limit_temp_min = (new_temp >= 100) ? (new_temp - 100) : 0;
 		draw_st.old_limit_temp_min = draw_st.limit_temp_min;
-		draw_st.limit_temp_max = draw_st.new_temp + 100;
+		draw_st.limit_temp_max = new_temp + 200;
 		draw_st.old_limit_temp_max = draw_st.limit_temp_max;
 		memset((void *)&draw_st.temperature_table[0], draw_st.new_temp, sizeof(draw_st.temperature_table));
 		draw_print_temp_limits();
@@ -142,9 +143,10 @@ void draw_update(void)
 	}
 
 	if (!draw_st.first_wind_set) {
-		draw_st.limit_wind_min = (draw_st.new_windspeed > 100) ? (draw_st.new_windspeed - 100) : 0;
+		UInt32 new_windspeed = (draw_st.new_windspeed / 100) * 100;
+		draw_st.limit_wind_min = (new_windspeed >= 100) ? (new_windspeed - 100) : 0;
 		draw_st.old_limit_wind_min = draw_st.limit_wind_min;
-		draw_st.limit_wind_max = draw_st.new_windspeed + 100;
+		draw_st.limit_wind_max = new_windspeed + 200;
 		draw_st.old_limit_wind_max = draw_st.limit_wind_max;
 		memset((void *)&draw_st.windspeed_table[0], draw_st.new_windspeed, sizeof(draw_st.windspeed_table));
 		draw_print_wind_limits();
