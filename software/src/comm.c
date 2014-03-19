@@ -152,7 +152,7 @@ int comm_read_data(int *temp, int *windspeed)
 					timeout=15;
 					continue;
 				} else if (comm_st.message[0] == 'E' && comm_st.message[1] == 'R') {
-					FrmCustomAlert(alertID_debug, comm_st.message, NULL, NULL);
+					//FrmCustomAlert(alertID_debug, comm_st.message, NULL, NULL);
 					comm_reset_buffer();
 					timeout=15;
 					continue;
