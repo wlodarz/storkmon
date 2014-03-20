@@ -21,6 +21,8 @@ struct draw_state {
 	signed char wind_limit_min_string[NUM_VAL_LEN];
 	signed char wind_limit_max_string[NUM_VAL_LEN];
 
+	unsigned char timeline[DISPLAY_WINDOW_WIDTH];
+
 	int first_temp_set;
 	int first_wind_set;
 
@@ -38,6 +40,8 @@ struct draw_state {
 	int limit_selected_timeout;
 	RectangleType selection_rect;
 	int limit;
+
+	UInt16 last_seconds;
 };
 
 static struct draw_state draw_st;
@@ -57,6 +61,8 @@ int draw_init(void)
 	*(char *)draw_st.windspeed_string = '\0';
 	draw_st.limit_selected = 0;
 	draw_st.limit_selected_timeout = 0;
+	memset(&draw_st.timeline, 0, sizeof(draw_st.timeline));
+	draw_st.last_seconds = 0;
 
 	return 0;
 }
@@ -128,6 +134,7 @@ void draw_update(void)
 {
 	int x;
 	int tval, wval;
+	UInt16 current_seconds;
 
 	draw_constant();
 
@@ -182,6 +189,10 @@ void draw_update(void)
 		yp = DISPLAY_WINDOW_HEIGHT - ELEM_POS_WIND_GRAPH_Y - wind_y;
 		WinErasePixel(xp, yp);
 		}
+
+		if (draw_st.timeline[(x+draw_st.start_index) % DISPLAY_WINDOW_WIDTH]) {
+			WinEraseLine(ELEM_POS_TEMP_GRAPH_X+x, 20, ELEM_POS_TEMP_GRAPH_X+x, 150);
+		}
 	}
 	// clean also last numeric values
 	if (draw_st.first_temp_set)
@@ -189,19 +200,30 @@ void draw_update(void)
 	if (draw_st.first_wind_set)
 		WinEraseChars(draw_st.windspeed_string, strlen(draw_st.temperature_string), ELEM_POS_WIND_NUM_X, DISPLAY_WINDOW_HEIGHT - ELEM_POS_WIND_NUM_Y);
 
+//	if (draw_st.timeline[(x+draw_st.start_index + DISPLAY_WINDOW_WIDTH - 1) % DISPLAY_WINDOW_WIDTH]) draw_st.timeline[(x+draw_st.start_index + DISPLAY_WINDOW_WIDTH - 1)] = 0;
+
 	// add new values
 	draw_st.temperature_table[(x+draw_st.start_index)%DISPLAY_WINDOW_WIDTH] = draw_st.new_temp;
 	draw_st.windspeed_table[(x+draw_st.start_index)%DISPLAY_WINDOW_WIDTH] = draw_st.new_windspeed;
 
+	if (draw_st.timeline[draw_st.start_index]) draw_st.timeline[draw_st.start_index] = 0;
+
+	current_seconds = TimGetSeconds();
+	if ((current_seconds % 20) == 0 && current_seconds > draw_st.last_seconds) {
+		draw_st.timeline[(draw_st.start_index)] = 1;
+		draw_st.last_seconds = current_seconds;
+	}
+
 	// move start index
 	draw_st.start_index = (draw_st.start_index + 1) % DISPLAY_WINDOW_WIDTH;
+
 
 	// now draw new drawing, both: temperature and windspeed
 	for(x=0; x<DISPLAY_WINDOW_WIDTH; x++) {
 		UInt32 xp, yp;
 		UInt32 temp_y, wind_y;
-		UInt32 temp_delta = draw_st.old_limit_temp_max - draw_st.old_limit_temp_min;
-		UInt32 wind_delta = draw_st.old_limit_wind_max - draw_st.old_limit_wind_min;
+		UInt32 temp_delta = draw_st.limit_temp_max - draw_st.limit_temp_min;
+		UInt32 wind_delta = draw_st.limit_wind_max - draw_st.limit_wind_min;
 		UInt32 display_height;
 
 		if (draw_st.first_temp_set) {
@@ -227,8 +249,15 @@ void draw_update(void)
 		yp = DISPLAY_WINDOW_HEIGHT - ELEM_POS_WIND_GRAPH_Y - wind_y;
 		WinDrawPixel(xp, yp);
 
+		if (draw_st.timeline[(x+draw_st.start_index) % DISPLAY_WINDOW_WIDTH]) {
+			WinDrawLine(xp, 30, xp, 130);
+		}
+
 		draw_st.old_limit_wind_min = draw_st.limit_wind_min;
 		draw_st.old_limit_wind_max = draw_st.limit_wind_max;
+		}
+		if (draw_st.timeline[(x+draw_st.start_index) % DISPLAY_WINDOW_WIDTH]) {
+			WinDrawLine(ELEM_POS_TEMP_GRAPH_X+x, 20, ELEM_POS_TEMP_GRAPH_X+x, 150);
 		}
 	}
 	// draw also new numeric values
