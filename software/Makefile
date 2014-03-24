@@ -18,16 +18,16 @@ $(PROJ):    obj/main.o obj/draw.o obj/comm.o obj/zbparse.o
 code0001.$(PROJ).grc: $(PROJ)
 	m68k-palmos-obj-res $(PROJ)
 
-obj/draw.o:  src/draw.c
+obj/draw.o:  src/draw.c include/draw.h
 	$(CC) -c $< -o $@ $(CFLAGS)
 
-obj/comm.o:  src/comm.c
+obj/comm.o:  src/comm.c include/comm.h include/storkmon.h
 	$(CC) -c $< -o $@ $(CFLAGS)
 
 obj/zbparse.o:  src/zbparse.c
 	$(CC) -c $< -o $@ $(CFLAGS)
 
-obj/main.o:  src/main.c
+obj/main.o:  src/main.c include/draw.h include/comm.h include/storkmon.h
 	$(CC) -c $< -o $@ $(CFLAGS)
 
 tfrm03e8.bin: src/$(PROJ).rcp include/$(PROJ).h src/$(PROJ).txt

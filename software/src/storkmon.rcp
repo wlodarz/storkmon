@@ -107,3 +107,11 @@ BEGIN
 	BUTTONS "Ok"
 END
 
+ALERT ID alertID_density
+INFORMATION
+BEGIN
+	TITLE "Density"
+	MESSAGE "Density ^1"
+	BUTTONS "Ok"
+END
+

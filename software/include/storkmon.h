@@ -7,6 +7,7 @@
 #define menuID_stork			1000
 #define menuitemID_quit			2007
 #define menuitemID_about		2008
+#define menuitemID_density		2009
 
 #define alertID_about			2010
 #define alertID_pendown			2011
@@ -18,3 +19,4 @@
 #define alertID_hard2			2017
 #define alertID_hard3			2018
 #define alertID_hard4			2019
+#define alertID_density			2020

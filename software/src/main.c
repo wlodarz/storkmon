@@ -17,6 +17,7 @@ int quit = 0;
 
 static Boolean storkHandler(EventPtr event) {
 	int handled = 0;
+	char msg[10];
 
 	switch(event->eType) {
 		case frmOpenEvent:

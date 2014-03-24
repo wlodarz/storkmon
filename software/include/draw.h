@@ -3,39 +3,23 @@
 
 /* Displayed elements position
  */
-/* temperature numeric value position */
-#define ELEM_POS_TEMP_NUM_X 137
-#define ELEM_POS_TEMP_NUM_Y 110
-#define ELEM_POS_TEMP_MIN_NUM_Y 90
-#define ELEM_POS_TEMP_MAX_NUM_Y 130
-#define ELEM_TEMP_HEIGHT (ELEM_POS_TEMP_MAX_NUM_Y - ELEM_POS_TEMP_MIN_NUM_Y)
-/* windspeed numeric value position */
-#define ELEM_POS_WIND_NUM_X 137
-#define ELEM_POS_WIND_NUM_Y 35
-#define ELEM_POS_WIND_MIN_NUM_Y 15
-#define ELEM_POS_WIND_MAX_NUM_Y 55
-#define ELEM_WIND_HEIGHT (ELEM_POS_WIND_MAX_NUM_Y - ELEM_POS_WIND_MIN_NUM_Y)
-/* temperature graph position */
-#define ELEM_POS_TEMP_GRAPH_X 10
-#define ELEM_POS_TEMP_GRAPH_Y 80
-/* windspeed graph position */
-#define ELEM_POS_WIND_GRAPH_X 10
-#define ELEM_POS_WIND_GRAPH_Y 20
+
+#define NUMERIC_VALUES_X_MARIGIN 23
+#define NUMERIC_VALUES_Y_MARIGIN 0
+#define NUMERIC_VALUE_HEIGHT 16
+#define NUMERIC_VALUES_Y_TITLE_MARIGIN (NUMERIC_VALUE_HEIGHT * 0)
+#define NUMERIC_VALUES_Y_MAX_MARIGIN (NUMERIC_VALUE_HEIGHT * 1)
+#define NUMERIC_VALUES_Y_VAL_MARIGIN (NUMERIC_VALUE_HEIGHT * 2)
+#define NUMERIC_VALUES_Y_MIN_MARIGIN (NUMERIC_VALUE_HEIGHT * 3)
 
 /* Values
  */
-#define DISPLAY_WINDOW_HEIGHT 160
-#define DISPLAY_WINDOW_WIDTH 120
+#define DISPLAY_WINDOW_Y_OFFSET 20
 #define NUM_VAL_LEN 8
 
-#define LIMIT_TEMP_MIN_X (ELEM_POS_TEMP_NUM_X-4)
-#define LIMIT_TEMP_MIN_Y (DISPLAY_WINDOW_HEIGHT - ELEM_POS_TEMP_MIN_NUM_Y - 2)
-#define LIMIT_TEMP_MAX_X (ELEM_POS_TEMP_NUM_X-4)
-#define LIMIT_TEMP_MAX_Y (DISPLAY_WINDOW_HEIGHT - ELEM_POS_TEMP_MAX_NUM_Y - 2)
-#define LIMIT_WIND_MIN_X (ELEM_POS_TEMP_NUM_X-4)
-#define LIMIT_WIND_MIN_Y (DISPLAY_WINDOW_HEIGHT - ELEM_POS_WIND_MIN_NUM_Y - 2)
-#define LIMIT_WIND_MAX_X (ELEM_POS_TEMP_NUM_X-4)
-#define LIMIT_WIND_MAX_Y (DISPLAY_WINDOW_HEIGHT - ELEM_POS_WIND_MAX_NUM_Y - 2)
+#define SINGLE_WIND_STEP 100
+#define SINGLE_TEMP_STEP 100
+
 #define LIMIT_WIDTH 27
 #define LIMIT_HEIGHT 15
 
@@ -44,6 +28,23 @@
 #define LIMIT_TEMP_MAX 3
 #define LIMIT_TEMP_MIN 4
 
+#define LIMIT_TEMP_MAX_X (draw_st.screen_width - LIMIT_WIDTH - 1)
+#define LIMIT_TEMP_MAX_Y (draw_st.y_marigin + NUMERIC_VALUES_Y_MAX_MARIGIN - 2)
+#define LIMIT_TEMP_MIN_X (draw_st.screen_width - LIMIT_WIDTH - 1)
+#define LIMIT_TEMP_MIN_Y (draw_st.y_marigin + NUMERIC_VALUES_Y_MIN_MARIGIN - 2)
+
+#define LIMIT_WIND_MAX_X (draw_st.screen_width - LIMIT_WIDTH - 1)
+#define LIMIT_WIND_MAX_Y (draw_st.y_marigin + (draw_st.screen_height / 2) + NUMERIC_VALUES_Y_MAX_MARIGIN - 2)
+#define LIMIT_WIND_MIN_X (draw_st.screen_width - LIMIT_WIDTH - 1)
+#define LIMIT_WIND_MIN_Y (draw_st.y_marigin + (draw_st.screen_height / 2) + NUMERIC_VALUES_Y_MIN_MARIGIN - 2)
+
+
+#define FRAME_TEMP_X     (ELEM_POS_TEMP_GRAPH_X)
+#define FRAME_TEMP_Y     (DISPLAY_WINDOW_HEIGHT - ELEM_POS_TEMP_GRAPH_Y)
+#define FRAME_TEMP_WIDTH (DISPLAY_WINDOW_WIDTH)
+#define FRAME_TEMP_HEIGHT (DISPLAY_WINDOW_HEIGHT / 2)
+
+#define LIMIT_SELECT_TIMEOUT 6
 
 /* init draw module
  */

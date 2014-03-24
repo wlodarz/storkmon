@@ -21,8 +21,6 @@ struct draw_state {
 	signed char wind_limit_min_string[NUM_VAL_LEN];
 	signed char wind_limit_max_string[NUM_VAL_LEN];
 
-	unsigned char timeline[DISPLAY_WINDOW_WIDTH];
-
 	int first_temp_set;
 	int first_wind_set;
 
@@ -41,7 +39,11 @@ struct draw_state {
 	RectangleType selection_rect;
 	int limit;
 
-	UInt16 last_seconds;
+	int x_marigin, y_marigin;
+	int screen_width, screen_height;
+
+	int graph_x_marigin, graph_y_marigin;
+	int graph_width, graph_height;
 };
 
 static struct draw_state draw_st;
@@ -50,6 +52,7 @@ static struct draw_state draw_st;
  */
 int draw_init(void)
 {
+	UInt32 xd, yd;
 
 	draw_st.start_index = 0;
 	draw_st.constant_drawed = 0;
@@ -61,8 +64,17 @@ int draw_init(void)
 	*(char *)draw_st.windspeed_string = '\0';
 	draw_st.limit_selected = 0;
 	draw_st.limit_selected_timeout = 0;
-	memset(&draw_st.timeline, 0, sizeof(draw_st.timeline));
-	draw_st.last_seconds = 0;
+
+	WinScreenMode(winScreenModeGet, &xd, &yd, NULL, NULL);
+	draw_st.screen_width = xd;
+	draw_st.screen_height = yd - DISPLAY_WINDOW_Y_OFFSET;
+	draw_st.x_marigin = 0;
+	draw_st.y_marigin = DISPLAY_WINDOW_Y_OFFSET;
+
+	draw_st.graph_x_marigin = draw_st.x_marigin;
+	draw_st.graph_y_marigin = draw_st.y_marigin;
+	draw_st.graph_width = draw_st.screen_width - NUMERIC_VALUES_X_MARIGIN;
+	draw_st.graph_height = draw_st.screen_height;
 
 	return 0;
 }
@@ -72,8 +84,8 @@ int draw_constant(void)
         char *wind_str = "WIND";
         char *temp_str = "TEMP";
 
-	WinDrawChars(wind_str, strlen(wind_str), ELEM_POS_TEMP_NUM_X, (DISPLAY_WINDOW_HEIGHT / 2) + 10);
-	WinDrawChars(temp_str, strlen(temp_str), ELEM_POS_WIND_NUM_X, 15);
+	WinDrawChars(temp_str, strlen(temp_str), draw_st.x_marigin + draw_st.screen_width - NUMERIC_VALUES_X_MARIGIN, draw_st.y_marigin + NUMERIC_VALUES_Y_TITLE_MARIGIN);
+	WinDrawChars(wind_str, strlen(wind_str), draw_st.x_marigin + draw_st.screen_width - NUMERIC_VALUES_X_MARIGIN, draw_st.y_marigin + (draw_st.screen_height / 2) + NUMERIC_VALUES_Y_TITLE_MARIGIN);
 
 	draw_st.constant_drawed = 1;
 }
@@ -88,30 +100,48 @@ int draw_destroy(void)
 void draw_print_wind_limits(void)
 {
 	int val;
-	WinEraseChars(draw_st.wind_limit_min_string, strlen(draw_st.wind_limit_min_string), ELEM_POS_WIND_NUM_X, DISPLAY_WINDOW_HEIGHT - ELEM_POS_WIND_MIN_NUM_Y);
-	WinEraseChars(draw_st.wind_limit_max_string, strlen(draw_st.wind_limit_max_string), ELEM_POS_WIND_NUM_X, DISPLAY_WINDOW_HEIGHT - ELEM_POS_WIND_MAX_NUM_Y);
+	WinEraseChars(draw_st.wind_limit_max_string, strlen(draw_st.wind_limit_max_string), 
+		draw_st.x_marigin + draw_st.screen_width        - NUMERIC_VALUES_X_MARIGIN, 
+		draw_st.y_marigin + (draw_st.screen_height / 2) + NUMERIC_VALUES_Y_MARIGIN + NUMERIC_VALUES_Y_MAX_MARIGIN);
+	WinEraseChars(draw_st.wind_limit_min_string, strlen(draw_st.wind_limit_min_string), 
+		draw_st.x_marigin + draw_st.screen_width        - NUMERIC_VALUES_X_MARIGIN, 
+		draw_st.y_marigin + (draw_st.screen_height / 2) + NUMERIC_VALUES_Y_MARIGIN + NUMERIC_VALUES_Y_MIN_MARIGIN);
 
 	val = draw_st.limit_wind_min;
-	sprintf(draw_st.wind_limit_min_string, "%02d.%02d", val / 100, val % 100);
+	sprintf(draw_st.wind_limit_min_string, "%02d.%02d", val / SINGLE_WIND_STEP, val % SINGLE_WIND_STEP);
 	val = draw_st.limit_wind_max;
-	sprintf(draw_st.wind_limit_max_string, "%02d.%02d", val / 100, val % 100);
-	WinDrawChars(draw_st.wind_limit_min_string, strlen(draw_st.wind_limit_min_string), ELEM_POS_WIND_NUM_X, DISPLAY_WINDOW_HEIGHT - ELEM_POS_WIND_MIN_NUM_Y);
-	WinDrawChars(draw_st.wind_limit_max_string, strlen(draw_st.wind_limit_max_string), ELEM_POS_WIND_NUM_X, DISPLAY_WINDOW_HEIGHT - ELEM_POS_WIND_MAX_NUM_Y);
+	sprintf(draw_st.wind_limit_max_string, "%02d.%02d", val / SINGLE_WIND_STEP, val % SINGLE_WIND_STEP);
+
+	WinDrawChars(draw_st.wind_limit_max_string, strlen(draw_st.wind_limit_max_string), 
+		draw_st.x_marigin + draw_st.screen_width        - NUMERIC_VALUES_X_MARIGIN, 
+		draw_st.y_marigin + (draw_st.screen_height / 2) + NUMERIC_VALUES_Y_MAX_MARIGIN  + NUMERIC_VALUES_Y_MARIGIN);
+	WinDrawChars(draw_st.wind_limit_min_string, strlen(draw_st.wind_limit_min_string), 
+		draw_st.x_marigin + draw_st.screen_width        - NUMERIC_VALUES_X_MARIGIN, 
+		draw_st.y_marigin + (draw_st.screen_height / 2) + NUMERIC_VALUES_Y_MIN_MARIGIN  + NUMERIC_VALUES_Y_MARIGIN);
 }
 
 void draw_print_temp_limits(void)
 {
 	int val;
 
-	WinEraseChars(draw_st.temperature_string, strlen(draw_st.temperature_string), ELEM_POS_TEMP_NUM_X, DISPLAY_WINDOW_HEIGHT - ELEM_POS_TEMP_MIN_NUM_Y);
-	WinEraseChars(draw_st.temperature_string, strlen(draw_st.temperature_string), ELEM_POS_TEMP_NUM_X, DISPLAY_WINDOW_HEIGHT - ELEM_POS_TEMP_MAX_NUM_Y);
+	WinEraseChars(draw_st.temp_limit_min_string, strlen(draw_st.temp_limit_min_string), 
+		draw_st.x_marigin + draw_st.screen_width        - NUMERIC_VALUES_X_MARIGIN, 
+		draw_st.y_marigin + NUMERIC_VALUES_Y_MIN_MARIGIN  + NUMERIC_VALUES_Y_MARIGIN);
+	WinEraseChars(draw_st.temp_limit_max_string, strlen(draw_st.temp_limit_max_string), 
+		draw_st.x_marigin + draw_st.screen_width        - NUMERIC_VALUES_X_MARIGIN, 
+		draw_st.y_marigin + NUMERIC_VALUES_Y_MAX_MARIGIN  + NUMERIC_VALUES_Y_MARIGIN);
 
 	val = draw_st.limit_temp_min;
-	sprintf(draw_st.temp_limit_min_string, "%02d.%02d", val / 100, val % 100);
+	sprintf(draw_st.temp_limit_min_string, "%02d.%02d", val / SINGLE_TEMP_STEP, val % SINGLE_TEMP_STEP);
 	val = draw_st.limit_temp_max;
-	sprintf(draw_st.temp_limit_max_string, "%02d.%02d", val / 100, val % 100);
-	WinDrawChars(draw_st.temp_limit_min_string, strlen(draw_st.temp_limit_min_string), ELEM_POS_TEMP_NUM_X, DISPLAY_WINDOW_HEIGHT - ELEM_POS_TEMP_MIN_NUM_Y);
-	WinDrawChars(draw_st.temp_limit_max_string, strlen(draw_st.temp_limit_max_string), ELEM_POS_TEMP_NUM_X, DISPLAY_WINDOW_HEIGHT - ELEM_POS_TEMP_MAX_NUM_Y);
+	sprintf(draw_st.temp_limit_max_string, "%02d.%02d", val / SINGLE_TEMP_STEP, val % SINGLE_TEMP_STEP);
+
+	WinDrawChars(draw_st.temp_limit_min_string, strlen(draw_st.temp_limit_min_string), 
+		draw_st.x_marigin + draw_st.screen_width        - NUMERIC_VALUES_X_MARIGIN, 
+		draw_st.y_marigin + NUMERIC_VALUES_Y_MIN_MARIGIN  + NUMERIC_VALUES_Y_MARIGIN);
+	WinDrawChars(draw_st.temp_limit_max_string, strlen(draw_st.temp_limit_max_string), 
+		draw_st.x_marigin + draw_st.screen_width        - NUMERIC_VALUES_X_MARIGIN, 
+		draw_st.y_marigin + NUMERIC_VALUES_Y_MAX_MARIGIN  + NUMERIC_VALUES_Y_MARIGIN);
 }
 
 /* add measured temperature value to the screen
@@ -139,10 +169,10 @@ void draw_update(void)
 	draw_constant();
 
 	if (!draw_st.first_temp_set) {
-		UInt32 new_temp = (draw_st.new_temp / 100) * 100;
-		draw_st.limit_temp_min = (new_temp >= 100) ? (new_temp - 100) : 0;
+		UInt32 new_temp = (draw_st.new_temp / SINGLE_TEMP_STEP) * SINGLE_TEMP_STEP;
+		draw_st.limit_temp_min = (new_temp >= SINGLE_TEMP_STEP) ? (new_temp - SINGLE_TEMP_STEP) : 0;
 		draw_st.old_limit_temp_min = draw_st.limit_temp_min;
-		draw_st.limit_temp_max = new_temp + 200;
+		draw_st.limit_temp_max = new_temp + SINGLE_TEMP_STEP * 2;
 		draw_st.old_limit_temp_max = draw_st.limit_temp_max;
 		memset((void *)&draw_st.temperature_table[0], draw_st.new_temp, sizeof(draw_st.temperature_table));
 		draw_print_temp_limits();
@@ -150,10 +180,10 @@ void draw_update(void)
 	}
 
 	if (!draw_st.first_wind_set) {
-		UInt32 new_windspeed = (draw_st.new_windspeed / 100) * 100;
-		draw_st.limit_wind_min = (new_windspeed >= 100) ? (new_windspeed - 100) : 0;
+		UInt32 new_windspeed = (draw_st.new_windspeed / SINGLE_WIND_STEP) * SINGLE_WIND_STEP;
+		draw_st.limit_wind_min = (new_windspeed >= SINGLE_WIND_STEP) ? (new_windspeed - SINGLE_WIND_STEP) : 0;
 		draw_st.old_limit_wind_min = draw_st.limit_wind_min;
-		draw_st.limit_wind_max = new_windspeed + 200;
+		draw_st.limit_wind_max = new_windspeed + SINGLE_WIND_STEP * 2;
 		draw_st.old_limit_wind_max = draw_st.limit_wind_max;
 		memset((void *)&draw_st.windspeed_table[0], draw_st.new_windspeed, sizeof(draw_st.windspeed_table));
 		draw_print_wind_limits();
@@ -169,54 +199,67 @@ void draw_update(void)
 		UInt32 display_height;
 
 		if (draw_st.first_temp_set) {
-		display_height = ELEM_TEMP_HEIGHT;
-		xp = x + ELEM_POS_TEMP_GRAPH_X;
-		temp_y = draw_st.temperature_table[(x+draw_st.start_index) % DISPLAY_WINDOW_WIDTH];
-		temp_y = (temp_y < draw_st.old_limit_temp_min) ? draw_st.old_limit_temp_min : temp_y;
-		temp_y = (temp_y > draw_st.old_limit_temp_max) ? draw_st.old_limit_temp_max : temp_y;
-		temp_y = display_height * (temp_y - draw_st.old_limit_temp_min) / temp_delta;
-		yp = DISPLAY_WINDOW_HEIGHT - ELEM_POS_TEMP_GRAPH_Y - temp_y;
-		WinErasePixel(xp, yp);
+			display_height = draw_st.graph_height / 2;
+			xp = x + draw_st.graph_x_marigin;
+			temp_y = draw_st.temperature_table[(x+draw_st.start_index) % DISPLAY_WINDOW_WIDTH];
+			temp_y = (temp_y < draw_st.old_limit_temp_min) ? draw_st.old_limit_temp_min : temp_y;
+			temp_y = (temp_y > draw_st.old_limit_temp_max) ? draw_st.old_limit_temp_max : temp_y;
+			temp_y = display_height * (temp_y - draw_st.old_limit_temp_min) / temp_delta;
+			//yp = DISPLAY_WINDOW_HEIGHT - ELEM_POS_TEMP_GRAPH_Y - temp_y;
+			yp = draw_st.graph_y_marigin + (draw_st.graph_height / 2) - temp_y;
+			WinErasePixel(xp, yp);
 		}
 
 		if (draw_st.first_wind_set) {
-		display_height = ELEM_WIND_HEIGHT;
-		xp = x + ELEM_POS_WIND_GRAPH_X;
-		wind_y = draw_st.windspeed_table[(x+draw_st.start_index) % DISPLAY_WINDOW_WIDTH];
-		wind_y = (wind_y < draw_st.old_limit_wind_min) ? draw_st.old_limit_wind_min : wind_y;
-		wind_y = (wind_y > draw_st.old_limit_wind_max) ? draw_st.old_limit_wind_max : wind_y;
-		wind_y = display_height * (wind_y - draw_st.old_limit_wind_min) / wind_delta;
-		yp = DISPLAY_WINDOW_HEIGHT - ELEM_POS_WIND_GRAPH_Y - wind_y;
-		WinErasePixel(xp, yp);
-		}
-
-		if (draw_st.timeline[(x+draw_st.start_index) % DISPLAY_WINDOW_WIDTH]) {
-			WinEraseLine(ELEM_POS_TEMP_GRAPH_X+x, 20, ELEM_POS_TEMP_GRAPH_X+x, 150);
+			display_height = draw_st.graph_height / 2;
+			xp = x + draw_st.graph_x_marigin;
+			wind_y = draw_st.windspeed_table[(x+draw_st.start_index) % DISPLAY_WINDOW_WIDTH];
+			wind_y = (wind_y < draw_st.old_limit_wind_min) ? draw_st.old_limit_wind_min : wind_y;
+			wind_y = (wind_y > draw_st.old_limit_wind_max) ? draw_st.old_limit_wind_max : wind_y;
+			wind_y = display_height * (wind_y - draw_st.old_limit_wind_min) / wind_delta;
+			//yp = DISPLAY_WINDOW_HEIGHT - ELEM_POS_WIND_GRAPH_Y - wind_y;
+			yp = draw_st.graph_y_marigin + (draw_st.graph_height) - wind_y;
+			WinErasePixel(xp, yp);
 		}
 	}
+
 	// clean also last numeric values
 	if (draw_st.first_temp_set)
-		WinEraseChars(draw_st.temperature_string, strlen(draw_st.temperature_string), ELEM_POS_TEMP_NUM_X, DISPLAY_WINDOW_HEIGHT - ELEM_POS_TEMP_NUM_Y);
+		WinEraseChars(draw_st.temperature_string, strlen(draw_st.temperature_string), 
+				draw_st.x_marigin + draw_st.screen_width        - NUMERIC_VALUES_X_MARIGIN, 
+				draw_st.y_marigin + NUMERIC_VALUES_Y_MARIGIN + NUMERIC_VALUES_Y_VAL_MARIGIN);
 	if (draw_st.first_wind_set)
-		WinEraseChars(draw_st.windspeed_string, strlen(draw_st.temperature_string), ELEM_POS_WIND_NUM_X, DISPLAY_WINDOW_HEIGHT - ELEM_POS_WIND_NUM_Y);
-
-//	if (draw_st.timeline[(x+draw_st.start_index + DISPLAY_WINDOW_WIDTH - 1) % DISPLAY_WINDOW_WIDTH]) draw_st.timeline[(x+draw_st.start_index + DISPLAY_WINDOW_WIDTH - 1)] = 0;
+		WinEraseChars(draw_st.windspeed_string, strlen(draw_st.temperature_string), 
+				draw_st.x_marigin + draw_st.screen_width        - NUMERIC_VALUES_X_MARIGIN, 
+				draw_st.y_marigin + (draw_st.screen_height / 2 ) + NUMERIC_VALUES_Y_MARIGIN + NUMERIC_VALUES_Y_VAL_MARIGIN);
 
 	// add new values
 	draw_st.temperature_table[(x+draw_st.start_index)%DISPLAY_WINDOW_WIDTH] = draw_st.new_temp;
 	draw_st.windspeed_table[(x+draw_st.start_index)%DISPLAY_WINDOW_WIDTH] = draw_st.new_windspeed;
 
-	if (draw_st.timeline[draw_st.start_index]) draw_st.timeline[draw_st.start_index] = 0;
+	// TODO: ADD TIMELINES
+	WinDrawLine(draw_st.x_marigin + DISPLAY_WINDOW_WIDTH,  draw_st.y_marigin, 
+	            draw_st.x_marigin + DISPLAY_WINDOW_WIDTH,  draw_st.y_marigin + draw_st.screen_height);
+	WinDrawLine(draw_st.x_marigin + DISPLAY_WINDOW_WIDTH - 40,  draw_st.y_marigin, 
+	            draw_st.x_marigin + DISPLAY_WINDOW_WIDTH - 40,  draw_st.y_marigin + draw_st.screen_height);
+	WinDrawLine(draw_st.x_marigin + DISPLAY_WINDOW_WIDTH - 80,  draw_st.y_marigin, 
+	            draw_st.x_marigin + DISPLAY_WINDOW_WIDTH - 80,  draw_st.y_marigin + draw_st.screen_height);
+	WinDrawLine(draw_st.x_marigin + DISPLAY_WINDOW_WIDTH - 120,  draw_st.y_marigin, 
+	            draw_st.x_marigin + DISPLAY_WINDOW_WIDTH - 120,  draw_st.y_marigin + draw_st.screen_height);
 
-	current_seconds = TimGetSeconds();
-	if ((current_seconds % 20) == 0 && current_seconds > draw_st.last_seconds) {
-		draw_st.timeline[(draw_st.start_index)] = 1;
-		draw_st.last_seconds = current_seconds;
-	}
+	//WinDrawLine(ELEM_POS_TEMP_GRAPH_X+20, 30, ELEM_POS_TEMP_GRAPH_X+20, 150);
+	//WinDrawLine(ELEM_POS_TEMP_GRAPH_X+40, 30, ELEM_POS_TEMP_GRAPH_X+40, 150);
+	//WinDrawLine(ELEM_POS_TEMP_GRAPH_X+60, 30, ELEM_POS_TEMP_GRAPH_X+60, 150);
+	//WinDrawLine(ELEM_POS_TEMP_GRAPH_X+80, 30, ELEM_POS_TEMP_GRAPH_X+80, 150);
+	//WinDrawLine(ELEM_POS_TEMP_GRAPH_X+100, 30, ELEM_POS_TEMP_GRAPH_X+100, 150);
+	//WinDrawLine(ELEM_POS_TEMP_GRAPH_X+120, 30, ELEM_POS_TEMP_GRAPH_X+120, 150);
+
+	//WinDrawLine(ELEM_POS_TEMP_GRAPH_X, 30, ELEM_POS_TEMP_GRAPH_X+120, 30);
+	//WinDrawLine(ELEM_POS_TEMP_GRAPH_X, 85, ELEM_POS_TEMP_GRAPH_X+120, 85);
+	//WinDrawLine(ELEM_POS_TEMP_GRAPH_X, 150, ELEM_POS_TEMP_GRAPH_X+120, 150);
 
 	// move start index
 	draw_st.start_index = (draw_st.start_index + 1) % DISPLAY_WINDOW_WIDTH;
-
 
 	// now draw new drawing, both: temperature and windspeed
 	for(x=0; x<DISPLAY_WINDOW_WIDTH; x++) {
@@ -227,48 +270,49 @@ void draw_update(void)
 		UInt32 display_height;
 
 		if (draw_st.first_temp_set) {
-		display_height = ELEM_TEMP_HEIGHT;
-		xp = x + ELEM_POS_TEMP_GRAPH_X;
-		temp_y = draw_st.temperature_table[(x+draw_st.start_index) % DISPLAY_WINDOW_WIDTH];
-		temp_y = (temp_y < draw_st.limit_temp_min) ? draw_st.limit_temp_min : temp_y;
-		temp_y = (temp_y > draw_st.limit_temp_max) ? draw_st.limit_temp_max : temp_y;
-		temp_y = display_height * (temp_y - draw_st.limit_temp_min) / temp_delta;
-		yp = DISPLAY_WINDOW_HEIGHT - ELEM_POS_TEMP_GRAPH_Y - temp_y;
-		WinDrawPixel(xp, yp);
-		draw_st.old_limit_temp_min = draw_st.limit_temp_min;
-		draw_st.old_limit_temp_max = draw_st.limit_temp_max;
+			display_height = draw_st.graph_height / 2;
+			xp = x + draw_st.graph_x_marigin;
+			temp_y = draw_st.temperature_table[(x+draw_st.start_index) % DISPLAY_WINDOW_WIDTH];
+			temp_y = (temp_y < draw_st.limit_temp_min) ? draw_st.limit_temp_min : temp_y;
+			temp_y = (temp_y > draw_st.limit_temp_max) ? draw_st.limit_temp_max : temp_y;
+			temp_y = display_height * (temp_y - draw_st.limit_temp_min) / temp_delta;
+			//yp = DISPLAY_WINDOW_HEIGHT - ELEM_POS_TEMP_GRAPH_Y - temp_y;
+			yp = draw_st.graph_y_marigin + (draw_st.graph_height / 2) - temp_y;
+			WinDrawPixel(xp, yp);
+			// old = current
+			draw_st.old_limit_temp_min = draw_st.limit_temp_min;
+			draw_st.old_limit_temp_max = draw_st.limit_temp_max;
 		}
 
 		if (draw_st.first_wind_set) {
-		display_height = ELEM_WIND_HEIGHT;
-		xp = x + ELEM_POS_WIND_GRAPH_X;
-		wind_y = draw_st.windspeed_table[(x+draw_st.start_index) % DISPLAY_WINDOW_WIDTH];
-		wind_y = (wind_y < draw_st.limit_wind_min) ? draw_st.limit_wind_min : wind_y;
-		wind_y = (wind_y > draw_st.limit_wind_max) ? draw_st.limit_wind_max : wind_y;
-		wind_y = display_height * (wind_y - draw_st.limit_wind_min) / wind_delta;
-		yp = DISPLAY_WINDOW_HEIGHT - ELEM_POS_WIND_GRAPH_Y - wind_y;
-		WinDrawPixel(xp, yp);
-
-		if (draw_st.timeline[(x+draw_st.start_index) % DISPLAY_WINDOW_WIDTH]) {
-			WinDrawLine(xp, 30, xp, 130);
-		}
-
-		draw_st.old_limit_wind_min = draw_st.limit_wind_min;
-		draw_st.old_limit_wind_max = draw_st.limit_wind_max;
-		}
-		if (draw_st.timeline[(x+draw_st.start_index) % DISPLAY_WINDOW_WIDTH]) {
-			WinDrawLine(ELEM_POS_TEMP_GRAPH_X+x, 20, ELEM_POS_TEMP_GRAPH_X+x, 150);
+			display_height = draw_st.graph_height / 2;
+			xp = x + draw_st.graph_x_marigin;
+			wind_y = draw_st.windspeed_table[(x+draw_st.start_index) % DISPLAY_WINDOW_WIDTH];
+			wind_y = (wind_y < draw_st.limit_wind_min) ? draw_st.limit_wind_min : wind_y;
+			wind_y = (wind_y > draw_st.limit_wind_max) ? draw_st.limit_wind_max : wind_y;
+			wind_y = display_height * (wind_y - draw_st.limit_wind_min) / wind_delta;
+			//yp = DISPLAY_WINDOW_HEIGHT - ELEM_POS_WIND_GRAPH_Y - wind_y;
+			yp = draw_st.graph_y_marigin + (draw_st.graph_height) - wind_y;
+			WinDrawPixel(xp, yp);
+			// old = current
+			draw_st.old_limit_wind_min = draw_st.limit_wind_min;
+			draw_st.old_limit_wind_max = draw_st.limit_wind_max;
 		}
 	}
+
 	// draw also new numeric values
 	tval = draw_st.new_temp;
 	wval = draw_st.new_windspeed;
-	sprintf(draw_st.temperature_string, "%02d.%02d", tval / 100, tval % 100);
-	sprintf(draw_st.windspeed_string,   "%02d.%02d", wval / 100, wval % 100);
+	sprintf(draw_st.temperature_string, "%02d.%02d", tval / SINGLE_TEMP_STEP, tval % SINGLE_TEMP_STEP);
+	sprintf(draw_st.windspeed_string,   "%02d.%02d", wval / SINGLE_WIND_STEP, wval % SINGLE_WIND_STEP);
 	if (draw_st.first_temp_set)
-		WinDrawChars(draw_st.temperature_string, strlen(draw_st.temperature_string), ELEM_POS_TEMP_NUM_X, DISPLAY_WINDOW_HEIGHT - ELEM_POS_TEMP_NUM_Y);
+		WinDrawChars(draw_st.temperature_string, strlen(draw_st.temperature_string),
+				draw_st.x_marigin + draw_st.screen_width        - NUMERIC_VALUES_X_MARIGIN, 
+				draw_st.y_marigin + NUMERIC_VALUES_Y_MARIGIN + NUMERIC_VALUES_Y_VAL_MARIGIN);
 	if (draw_st.first_wind_set)
-		WinDrawChars(draw_st.windspeed_string, strlen(draw_st.temperature_string), ELEM_POS_WIND_NUM_X, DISPLAY_WINDOW_HEIGHT - ELEM_POS_WIND_NUM_Y);
+		WinDrawChars(draw_st.windspeed_string, strlen(draw_st.temperature_string),
+				draw_st.x_marigin + draw_st.screen_width        - NUMERIC_VALUES_X_MARIGIN, 
+				draw_st.y_marigin + (draw_st.screen_height / 2 ) + NUMERIC_VALUES_Y_MARIGIN + NUMERIC_VALUES_Y_VAL_MARIGIN);
 }
 
 void draw_paint_selection(int x, int y, int dx, int dy)
@@ -304,33 +348,33 @@ void draw_select_limit(int limit)
 		case LIMIT_WIND_MAX:
 			draw_st.selection_rect.topLeft.x = LIMIT_WIND_MAX_X;
 			draw_st.selection_rect.topLeft.y = LIMIT_WIND_MAX_Y;
-			draw_st.selection_rect.extent.x = LIMIT_WIDTH;
-			draw_st.selection_rect.extent.y = LIMIT_HEIGHT;
+			draw_st.selection_rect.extent.x  = LIMIT_WIDTH;
+			draw_st.selection_rect.extent.y  = LIMIT_HEIGHT;
 			break;
 		case LIMIT_WIND_MIN:
 			draw_st.selection_rect.topLeft.x = LIMIT_WIND_MIN_X;
 			draw_st.selection_rect.topLeft.y = LIMIT_WIND_MIN_Y;
-			draw_st.selection_rect.extent.x = LIMIT_WIDTH;
-			draw_st.selection_rect.extent.y = LIMIT_HEIGHT;
+			draw_st.selection_rect.extent.x  = LIMIT_WIDTH;
+			draw_st.selection_rect.extent.y  = LIMIT_HEIGHT;
 			break;
 		case LIMIT_TEMP_MAX:
 			draw_st.selection_rect.topLeft.x = LIMIT_TEMP_MAX_X;
 			draw_st.selection_rect.topLeft.y = LIMIT_TEMP_MAX_Y;
-			draw_st.selection_rect.extent.x = LIMIT_WIDTH;
-			draw_st.selection_rect.extent.y = LIMIT_HEIGHT;
+			draw_st.selection_rect.extent.x  = LIMIT_WIDTH;
+			draw_st.selection_rect.extent.y  = LIMIT_HEIGHT;
 			break;
 		case LIMIT_TEMP_MIN:
 			draw_st.selection_rect.topLeft.x = LIMIT_TEMP_MIN_X;
 			draw_st.selection_rect.topLeft.y = LIMIT_TEMP_MIN_Y;
-			draw_st.selection_rect.extent.x = LIMIT_WIDTH;
-			draw_st.selection_rect.extent.y = LIMIT_HEIGHT;
+			draw_st.selection_rect.extent.x  = LIMIT_WIDTH;
+			draw_st.selection_rect.extent.y  = LIMIT_HEIGHT;
 			break;
 		default:
 			return;
 	}
 	/* select limit by drawing frame */
 	draw_st.limit_selected = 1;
-	draw_st.limit_selected_timeout = 6;
+	draw_st.limit_selected_timeout = LIMIT_SELECT_TIMEOUT;
 
 	x = draw_st.selection_rect.topLeft.x;
 	y = draw_st.selection_rect.topLeft.y;
@@ -344,19 +388,19 @@ void draw_inc_limit(void)
 	if (!draw_st.limit_selected) return;
 	switch(draw_st.limit) {
 		case LIMIT_WIND_MAX:
-			if (draw_st.limit_wind_max < 9900) draw_st.limit_wind_max += 100;
+			if (draw_st.limit_wind_max < 9900) draw_st.limit_wind_max += SINGLE_WIND_STEP;
 			break;
 		case LIMIT_WIND_MIN:
-			if ((draw_st.limit_wind_min + 100) < draw_st.limit_wind_max) draw_st.limit_wind_min += 100;
+			if ((draw_st.limit_wind_min + SINGLE_WIND_STEP) < draw_st.limit_wind_max) draw_st.limit_wind_min += SINGLE_WIND_STEP;
 			break;
 		case LIMIT_TEMP_MAX:
-			if (draw_st.limit_temp_max < 9900) draw_st.limit_temp_max += 100;
+			if (draw_st.limit_temp_max < 9900) draw_st.limit_temp_max += SINGLE_TEMP_STEP;
 			break;
 		case LIMIT_TEMP_MIN:
-			if ((draw_st.limit_temp_min + 100) < draw_st.limit_temp_max) draw_st.limit_temp_min += 100;
+			if ((draw_st.limit_temp_min + SINGLE_TEMP_STEP) < draw_st.limit_temp_max) draw_st.limit_temp_min += SINGLE_TEMP_STEP;
 			break;
 	}
-	draw_st.limit_selected_timeout = 6;
+	draw_st.limit_selected_timeout = LIMIT_SELECT_TIMEOUT;
 	draw_print_temp_limits();
 	draw_print_wind_limits();
 }
@@ -378,7 +422,7 @@ void draw_dec_limit(void)
 			if (draw_st.limit_temp_min > 100) draw_st.limit_temp_min -= 100;
 			break;
 	}
-	draw_st.limit_selected_timeout = 6;
+	draw_st.limit_selected_timeout = LIMIT_SELECT_TIMEOUT;
 	draw_print_temp_limits();
 	draw_print_wind_limits();
 }
