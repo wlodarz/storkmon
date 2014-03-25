@@ -14,6 +14,7 @@ FormPtr form;
 
 char testtext[] = "Test 123";
 int quit = 0;
+int autooff_counter;
 
 static Boolean storkHandler(EventPtr event) {
 	int handled = 0;
@@ -128,10 +129,19 @@ static void EventLoop(void) {
 	int temp, windspeed;
 	int timeout_counter = 0;
 	int draw_enable = 0;
-
+	static UInt32 lastResetTime;
+	
+	lastResetTime = TimGetSeconds();
+	autooff_counter = 0;
 	do {
 		//EvtGetEvent(&event, -1);
 		EvtGetEvent(&event, 50);
+
+		if (TimGetSeconds() - lastResetTime > 30) {
+			if (autooff_counter > ((40-1) * 2)) EvtResetAutoOffTimer();
+			autooff_counter++;
+			lastResetTime = TimGetSeconds();
+		}
 
 		if(hardwareButtonsHandler(&event)) continue;
 		if(SysHandleEvent(&event)) continue;

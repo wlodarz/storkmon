@@ -20,7 +20,7 @@
 #define SINGLE_WIND_STEP 100
 #define SINGLE_TEMP_STEP 100
 
-#define LIMIT_WIDTH 27
+#define LIMIT_WIDTH 25
 #define LIMIT_HEIGHT 15
 
 #define LIMIT_WIND_MAX 1

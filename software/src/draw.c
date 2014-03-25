@@ -4,7 +4,8 @@
 #include <string.h>
 #include "draw.h"
 
-#define DISPLAY_WINDOW_WIDTH 120
+//#define DISPLAY_WINDOW_WIDTH 120
+#define MAX_VALUE_INDEX 256
 #define NUM_VAL_LEN 8
 
 struct draw_state {
@@ -29,8 +30,10 @@ struct draw_state {
 	UInt32 old_limit_temp_min, old_limit_temp_max;
 	UInt32 old_limit_wind_min, old_limit_wind_max;
 
-	UInt32 temperature_table[DISPLAY_WINDOW_WIDTH];
-	UInt32 windspeed_table[DISPLAY_WINDOW_WIDTH];
+	UInt32 temp_max, wind_max;
+
+	UInt32 temperature_table[MAX_VALUE_INDEX];
+	UInt32 windspeed_table[MAX_VALUE_INDEX];
 
 	int constant_drawed;
 
@@ -44,6 +47,8 @@ struct draw_state {
 
 	int graph_x_marigin, graph_y_marigin;
 	int graph_width, graph_height;
+
+	int max_value_index;
 };
 
 static struct draw_state draw_st;
@@ -73,8 +78,12 @@ int draw_init(void)
 
 	draw_st.graph_x_marigin = draw_st.x_marigin;
 	draw_st.graph_y_marigin = draw_st.y_marigin;
-	draw_st.graph_width = draw_st.screen_width - NUMERIC_VALUES_X_MARIGIN;
+	draw_st.graph_width = draw_st.screen_width - NUMERIC_VALUES_X_MARIGIN - 4;
 	draw_st.graph_height = draw_st.screen_height;
+
+	draw_st.max_value_index = draw_st.graph_width;
+
+	draw_st.temp_max = draw_st.wind_max = 0;
 
 	return 0;
 }
@@ -86,6 +95,17 @@ int draw_constant(void)
 
 	WinDrawChars(temp_str, strlen(temp_str), draw_st.x_marigin + draw_st.screen_width - NUMERIC_VALUES_X_MARIGIN, draw_st.y_marigin + NUMERIC_VALUES_Y_TITLE_MARIGIN);
 	WinDrawChars(wind_str, strlen(wind_str), draw_st.x_marigin + draw_st.screen_width - NUMERIC_VALUES_X_MARIGIN, draw_st.y_marigin + (draw_st.screen_height / 2) + NUMERIC_VALUES_Y_TITLE_MARIGIN);
+
+	WinDrawLine(draw_st.x_marigin + 0,  draw_st.y_marigin + 0, 
+	            draw_st.x_marigin + draw_st.graph_width,  draw_st.y_marigin + 0);
+	WinDrawLine(draw_st.x_marigin + draw_st.graph_width,  draw_st.y_marigin + 0, 
+	            draw_st.x_marigin + draw_st.graph_width,  draw_st.y_marigin + draw_st.graph_height-1);
+	WinDrawLine(draw_st.x_marigin + draw_st.graph_width,  draw_st.y_marigin + draw_st.graph_height-1, 
+	            draw_st.x_marigin + 0,  draw_st.y_marigin + draw_st.graph_height-1);
+	WinDrawLine(draw_st.x_marigin + 0,  draw_st.y_marigin + draw_st.graph_height-1, 
+	            draw_st.x_marigin + 0,  draw_st.y_marigin + 0);
+	WinDrawLine(draw_st.x_marigin + 0,  draw_st.y_marigin + (draw_st.graph_height / 2), 
+	            draw_st.x_marigin + draw_st.graph_width,  draw_st.y_marigin + (draw_st.graph_height / 2));
 
 	draw_st.constant_drawed = 1;
 }
@@ -144,11 +164,31 @@ void draw_print_temp_limits(void)
 		draw_st.y_marigin + NUMERIC_VALUES_Y_MAX_MARIGIN  + NUMERIC_VALUES_Y_MARIGIN);
 }
 
+void draw_print_temp_max(void)
+{
+	char msg[10];
+	int val = draw_st.temp_max;
+	sprintf(msg, "T:%02d.%02d", val / SINGLE_TEMP_STEP, val % SINGLE_TEMP_STEP);
+	WinDrawChars(msg, strlen(msg), draw_st.x_marigin + 60, 2);
+}
+
+void draw_print_wind_max(void)
+{
+	char msg[10];
+	int val = draw_st.wind_max;
+	sprintf(msg, "W:%02d.%02d", val / SINGLE_WIND_STEP, val % SINGLE_WIND_STEP);
+	WinDrawChars(msg, strlen(msg), draw_st.x_marigin + 110, 2);
+}
+
 /* add measured temperature value to the screen
  */
 void draw_addval_temp(int y)
 {
 	draw_st.new_temp = y;
+	if (y > draw_st.temp_max) {
+		draw_st.temp_max = y;
+		draw_print_temp_max();
+	}
 }
 
 /* add measured windspeed value to the screen
@@ -156,6 +196,10 @@ void draw_addval_temp(int y)
 void draw_addval_wind(int y)
 {
 	draw_st.new_windspeed = y;
+	if (y > draw_st.wind_max) {
+		draw_st.wind_max = y;
+		draw_print_wind_max();
+	}
 }
 
 /* update screen
@@ -191,34 +235,31 @@ void draw_update(void)
 	}
 
 	// first clean last drawing, both: temperature and windspeed
-	for(x=0; x<DISPLAY_WINDOW_WIDTH; x++) {
+	for(x=0; x<draw_st.max_value_index; x++) {
 		UInt32 xp, yp;
 		UInt32 temp_y, wind_y;
 		UInt32 temp_delta = draw_st.old_limit_temp_max - draw_st.old_limit_temp_min;
 		UInt32 wind_delta = draw_st.old_limit_wind_max - draw_st.old_limit_wind_min;
-		UInt32 display_height;
+		UInt32 display_height = (draw_st.graph_height - 4) / 2;
 
 		if (draw_st.first_temp_set) {
-			display_height = draw_st.graph_height / 2;
 			xp = x + draw_st.graph_x_marigin;
-			temp_y = draw_st.temperature_table[(x+draw_st.start_index) % DISPLAY_WINDOW_WIDTH];
+			temp_y = draw_st.temperature_table[(x+draw_st.start_index) % draw_st.max_value_index];
 			temp_y = (temp_y < draw_st.old_limit_temp_min) ? draw_st.old_limit_temp_min : temp_y;
 			temp_y = (temp_y > draw_st.old_limit_temp_max) ? draw_st.old_limit_temp_max : temp_y;
 			temp_y = display_height * (temp_y - draw_st.old_limit_temp_min) / temp_delta;
-			//yp = DISPLAY_WINDOW_HEIGHT - ELEM_POS_TEMP_GRAPH_Y - temp_y;
-			yp = draw_st.graph_y_marigin + (draw_st.graph_height / 2) - temp_y;
+			yp = draw_st.graph_y_marigin + (draw_st.graph_height / 2) - 1 - temp_y;
 			WinErasePixel(xp, yp);
 		}
 
 		if (draw_st.first_wind_set) {
-			display_height = draw_st.graph_height / 2;
+			display_height -= 1;
 			xp = x + draw_st.graph_x_marigin;
-			wind_y = draw_st.windspeed_table[(x+draw_st.start_index) % DISPLAY_WINDOW_WIDTH];
+			wind_y = draw_st.windspeed_table[(x+draw_st.start_index) % draw_st.max_value_index];
 			wind_y = (wind_y < draw_st.old_limit_wind_min) ? draw_st.old_limit_wind_min : wind_y;
 			wind_y = (wind_y > draw_st.old_limit_wind_max) ? draw_st.old_limit_wind_max : wind_y;
 			wind_y = display_height * (wind_y - draw_st.old_limit_wind_min) / wind_delta;
-			//yp = DISPLAY_WINDOW_HEIGHT - ELEM_POS_WIND_GRAPH_Y - wind_y;
-			yp = draw_st.graph_y_marigin + (draw_st.graph_height) - wind_y;
+			yp = draw_st.graph_y_marigin + (draw_st.graph_height) - 2 - wind_y;
 			WinErasePixel(xp, yp);
 		}
 	}
@@ -234,35 +275,24 @@ void draw_update(void)
 				draw_st.y_marigin + (draw_st.screen_height / 2 ) + NUMERIC_VALUES_Y_MARIGIN + NUMERIC_VALUES_Y_VAL_MARIGIN);
 
 	// add new values
-	draw_st.temperature_table[(x+draw_st.start_index)%DISPLAY_WINDOW_WIDTH] = draw_st.new_temp;
-	draw_st.windspeed_table[(x+draw_st.start_index)%DISPLAY_WINDOW_WIDTH] = draw_st.new_windspeed;
+	draw_st.temperature_table[(x+draw_st.start_index)%draw_st.max_value_index] = draw_st.new_temp;
+	draw_st.windspeed_table[(x+draw_st.start_index)%draw_st.max_value_index] = draw_st.new_windspeed;
 
 	// TODO: ADD TIMELINES
-	WinDrawLine(draw_st.x_marigin + DISPLAY_WINDOW_WIDTH,  draw_st.y_marigin, 
-	            draw_st.x_marigin + DISPLAY_WINDOW_WIDTH,  draw_st.y_marigin + draw_st.screen_height);
-	WinDrawLine(draw_st.x_marigin + DISPLAY_WINDOW_WIDTH - 40,  draw_st.y_marigin, 
-	            draw_st.x_marigin + DISPLAY_WINDOW_WIDTH - 40,  draw_st.y_marigin + draw_st.screen_height);
-	WinDrawLine(draw_st.x_marigin + DISPLAY_WINDOW_WIDTH - 80,  draw_st.y_marigin, 
-	            draw_st.x_marigin + DISPLAY_WINDOW_WIDTH - 80,  draw_st.y_marigin + draw_st.screen_height);
-	WinDrawLine(draw_st.x_marigin + DISPLAY_WINDOW_WIDTH - 120,  draw_st.y_marigin, 
-	            draw_st.x_marigin + DISPLAY_WINDOW_WIDTH - 120,  draw_st.y_marigin + draw_st.screen_height);
-
-	//WinDrawLine(ELEM_POS_TEMP_GRAPH_X+20, 30, ELEM_POS_TEMP_GRAPH_X+20, 150);
-	//WinDrawLine(ELEM_POS_TEMP_GRAPH_X+40, 30, ELEM_POS_TEMP_GRAPH_X+40, 150);
-	//WinDrawLine(ELEM_POS_TEMP_GRAPH_X+60, 30, ELEM_POS_TEMP_GRAPH_X+60, 150);
-	//WinDrawLine(ELEM_POS_TEMP_GRAPH_X+80, 30, ELEM_POS_TEMP_GRAPH_X+80, 150);
-	//WinDrawLine(ELEM_POS_TEMP_GRAPH_X+100, 30, ELEM_POS_TEMP_GRAPH_X+100, 150);
-	//WinDrawLine(ELEM_POS_TEMP_GRAPH_X+120, 30, ELEM_POS_TEMP_GRAPH_X+120, 150);
-
-	//WinDrawLine(ELEM_POS_TEMP_GRAPH_X, 30, ELEM_POS_TEMP_GRAPH_X+120, 30);
-	//WinDrawLine(ELEM_POS_TEMP_GRAPH_X, 85, ELEM_POS_TEMP_GRAPH_X+120, 85);
-	//WinDrawLine(ELEM_POS_TEMP_GRAPH_X, 150, ELEM_POS_TEMP_GRAPH_X+120, 150);
+	WinDrawLine(draw_st.x_marigin + draw_st.graph_width,  draw_st.y_marigin, 
+	            draw_st.x_marigin + draw_st.graph_width,  draw_st.y_marigin + draw_st.screen_height);
+	WinDrawLine(draw_st.x_marigin + draw_st.graph_width - 40,  draw_st.y_marigin, 
+	            draw_st.x_marigin + draw_st.graph_width - 40,  draw_st.y_marigin + draw_st.screen_height);
+	WinDrawLine(draw_st.x_marigin + draw_st.graph_width - 80,  draw_st.y_marigin, 
+	            draw_st.x_marigin + draw_st.graph_width - 80,  draw_st.y_marigin + draw_st.screen_height);
+	WinDrawLine(draw_st.x_marigin + draw_st.graph_width - 120,  draw_st.y_marigin, 
+	            draw_st.x_marigin + draw_st.graph_width - 120,  draw_st.y_marigin + draw_st.screen_height);
 
 	// move start index
-	draw_st.start_index = (draw_st.start_index + 1) % DISPLAY_WINDOW_WIDTH;
+	draw_st.start_index = (draw_st.start_index + 1) % draw_st.max_value_index;
 
 	// now draw new drawing, both: temperature and windspeed
-	for(x=0; x<DISPLAY_WINDOW_WIDTH; x++) {
+	for(x=0; x<draw_st.max_value_index; x++) {
 		UInt32 xp, yp;
 		UInt32 temp_y, wind_y;
 		UInt32 temp_delta = draw_st.limit_temp_max - draw_st.limit_temp_min;
@@ -270,14 +300,13 @@ void draw_update(void)
 		UInt32 display_height;
 
 		if (draw_st.first_temp_set) {
-			display_height = draw_st.graph_height / 2;
+			display_height = (draw_st.graph_height - 4) / 2;
 			xp = x + draw_st.graph_x_marigin;
-			temp_y = draw_st.temperature_table[(x+draw_st.start_index) % DISPLAY_WINDOW_WIDTH];
+			temp_y = draw_st.temperature_table[(x+draw_st.start_index) % draw_st.max_value_index];
 			temp_y = (temp_y < draw_st.limit_temp_min) ? draw_st.limit_temp_min : temp_y;
 			temp_y = (temp_y > draw_st.limit_temp_max) ? draw_st.limit_temp_max : temp_y;
 			temp_y = display_height * (temp_y - draw_st.limit_temp_min) / temp_delta;
-			//yp = DISPLAY_WINDOW_HEIGHT - ELEM_POS_TEMP_GRAPH_Y - temp_y;
-			yp = draw_st.graph_y_marigin + (draw_st.graph_height / 2) - temp_y;
+			yp = draw_st.graph_y_marigin + (draw_st.graph_height / 2) - 1 - temp_y;
 			WinDrawPixel(xp, yp);
 			// old = current
 			draw_st.old_limit_temp_min = draw_st.limit_temp_min;
@@ -285,14 +314,14 @@ void draw_update(void)
 		}
 
 		if (draw_st.first_wind_set) {
-			display_height = draw_st.graph_height / 2;
+			display_height = (draw_st.graph_height - 4) / 2;
+			display_height -= 1;
 			xp = x + draw_st.graph_x_marigin;
-			wind_y = draw_st.windspeed_table[(x+draw_st.start_index) % DISPLAY_WINDOW_WIDTH];
+			wind_y = draw_st.windspeed_table[(x+draw_st.start_index) % draw_st.max_value_index];
 			wind_y = (wind_y < draw_st.limit_wind_min) ? draw_st.limit_wind_min : wind_y;
 			wind_y = (wind_y > draw_st.limit_wind_max) ? draw_st.limit_wind_max : wind_y;
 			wind_y = display_height * (wind_y - draw_st.limit_wind_min) / wind_delta;
-			//yp = DISPLAY_WINDOW_HEIGHT - ELEM_POS_WIND_GRAPH_Y - wind_y;
-			yp = draw_st.graph_y_marigin + (draw_st.graph_height) - wind_y;
+			yp = draw_st.graph_y_marigin + (draw_st.graph_height) - 2 - wind_y;
 			WinDrawPixel(xp, yp);
 			// old = current
 			draw_st.old_limit_wind_min = draw_st.limit_wind_min;
