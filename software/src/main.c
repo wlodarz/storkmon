@@ -138,7 +138,7 @@ static void EventLoop(void) {
 		EvtGetEvent(&event, 50);
 
 		if (TimGetSeconds() - lastResetTime > 30) {
-			if (autooff_counter > ((40-1) * 2)) EvtResetAutoOffTimer();
+			if (autooff_counter < ((40-1) * 2)) EvtResetAutoOffTimer();
 			autooff_counter++;
 			lastResetTime = TimGetSeconds();
 		}

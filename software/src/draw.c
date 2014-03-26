@@ -442,13 +442,13 @@ void draw_dec_limit(void)
 			if ((draw_st.limit_wind_max-100) > draw_st.limit_wind_min) draw_st.limit_wind_max -= 100;
 			break;
 		case LIMIT_WIND_MIN:
-			if (draw_st.limit_wind_min > 100) draw_st.limit_wind_min -= 100;
+			if (draw_st.limit_wind_min >= 100) draw_st.limit_wind_min -= 100;
 			break;
 		case LIMIT_TEMP_MAX:
 			if ((draw_st.limit_temp_max-100) > draw_st.limit_temp_min) draw_st.limit_temp_max -= 100;
 			break;
 		case LIMIT_TEMP_MIN:
-			if (draw_st.limit_temp_min > 100) draw_st.limit_temp_min -= 100;
+			if (draw_st.limit_temp_min >= 100) draw_st.limit_temp_min -= 100;
 			break;
 	}
 	draw_st.limit_selected_timeout = LIMIT_SELECT_TIMEOUT;
