@@ -93,6 +93,9 @@ static Boolean hardwareButtonsHandler(EventPtr event) {
 				draw_select_limit(LIMIT_WIND_MIN);
 				handled = 1;
 				break;
+			case vchrAutoOff:
+				autooff_counter = 0;
+				break;
 		}
 	}
 	return handled;

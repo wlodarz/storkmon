@@ -85,6 +85,7 @@ int draw_init(void)
 
 	draw_st.temp_max = draw_st.wind_max = 0;
 
+
 	return 0;
 }
 
@@ -106,6 +107,7 @@ int draw_constant(void)
 	            draw_st.x_marigin + 0,  draw_st.y_marigin + 0);
 	WinDrawLine(draw_st.x_marigin + 0,  draw_st.y_marigin + (draw_st.graph_height / 2), 
 	            draw_st.x_marigin + draw_st.graph_width,  draw_st.y_marigin + (draw_st.graph_height / 2));
+
 
 	draw_st.constant_drawed = 1;
 }
@@ -169,7 +171,7 @@ void draw_print_temp_max(void)
 	char msg[10];
 	int val = draw_st.temp_max;
 	sprintf(msg, "T:%02d.%02d", val / SINGLE_TEMP_STEP, val % SINGLE_TEMP_STEP);
-	WinDrawChars(msg, strlen(msg), draw_st.x_marigin + 60, 2);
+	WinDrawChars(msg, strlen(msg), draw_st.x_marigin + 92, 1);
 }
 
 void draw_print_wind_max(void)
@@ -177,7 +179,7 @@ void draw_print_wind_max(void)
 	char msg[10];
 	int val = draw_st.wind_max;
 	sprintf(msg, "W:%02d.%02d", val / SINGLE_WIND_STEP, val % SINGLE_WIND_STEP);
-	WinDrawChars(msg, strlen(msg), draw_st.x_marigin + 110, 2);
+	WinDrawChars(msg, strlen(msg), draw_st.x_marigin + 127, 1);
 }
 
 /* add measured temperature value to the screen
@@ -212,8 +214,27 @@ void draw_update(void)
 
 	draw_constant();
 
+	if (!draw_st.first_temp_set && !draw_st.first_wind_set) {
+		RectangleType rect;
+		UInt16 cornerDiam = 0;
+		char msg[30];
+
+		rect.topLeft.x = 0;
+		rect.topLeft.y = 0;
+		rect.extent.x = 160;
+		rect.extent.y = 20;
+		WinEraseRectangle(&rect, cornerDiam);
+
+		sprintf(msg, "4m  2m  1m");
+		WinDrawChars(msg, strlen(msg), draw_st.x_marigin + 10, 0);
+		sprintf(msg, "3        2        1");
+		WinDrawChars(msg, strlen(msg), draw_st.x_marigin + 10, 10);
+	}
+
 	if (!draw_st.first_temp_set) {
-		UInt32 new_temp = (draw_st.new_temp / SINGLE_TEMP_STEP) * SINGLE_TEMP_STEP;
+		UInt32 new_temp;
+
+		new_temp = (draw_st.new_temp / SINGLE_TEMP_STEP) * SINGLE_TEMP_STEP;
 		draw_st.limit_temp_min = (new_temp >= SINGLE_TEMP_STEP) ? (new_temp - SINGLE_TEMP_STEP) : 0;
 		draw_st.old_limit_temp_min = draw_st.limit_temp_min;
 		draw_st.limit_temp_max = new_temp + SINGLE_TEMP_STEP * 2;
@@ -224,11 +245,18 @@ void draw_update(void)
 	}
 
 	if (!draw_st.first_wind_set) {
+#if 0
 		UInt32 new_windspeed = (draw_st.new_windspeed / SINGLE_WIND_STEP) * SINGLE_WIND_STEP;
 		draw_st.limit_wind_min = (new_windspeed >= SINGLE_WIND_STEP) ? (new_windspeed - SINGLE_WIND_STEP) : 0;
 		draw_st.old_limit_wind_min = draw_st.limit_wind_min;
 		draw_st.limit_wind_max = new_windspeed + SINGLE_WIND_STEP * 2;
 		draw_st.old_limit_wind_max = draw_st.limit_wind_max;
+#else
+		draw_st.limit_wind_min = 0;
+		draw_st.old_limit_wind_min = draw_st.limit_wind_min;
+		draw_st.limit_wind_max = 1500;
+		draw_st.old_limit_wind_max = draw_st.limit_wind_max;
+#endif
 		memset((void *)&draw_st.windspeed_table[0], draw_st.new_windspeed, sizeof(draw_st.windspeed_table));
 		draw_print_wind_limits();
 		draw_st.first_wind_set = 1;
