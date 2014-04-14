@@ -202,8 +202,13 @@ int comm_read_data(int *temp, int *windspeed)
 	tstr = StrStr(comm_st.message, "temp");
 	wstr = StrStr(comm_st.message, "wind");
 	if (tstr && wstr) {
+		int wtmp;
 		*temp =      (tstr[5] - '0') * 1000 + (tstr[6] - '0') * 100 + (tstr[8] - '0') * 10 + (tstr[9] - '0');
-		*windspeed = (wstr[5] - '0') * 1000 + (wstr[6] - '0') * 100 + (wstr[8] - '0') * 10 + (wstr[9] - '0');
+		//*windspeed = (wstr[5] - '0') * 1000 + (wstr[6] - '0') * 100 + (wstr[8] - '0') * 10 + (wstr[9] - '0');
+		wtmp = (wstr[5] - '0') * 1000 + (wstr[6] - '0') * 100 + (wstr[8] - '0') * 10 + (wstr[9] - '0');
+		*windspeed = (wtmp * 2) / 3;
+
+		
 		//FrmCustomAlert(alertID_debug, comm_st.message, NULL, NULL);
 		return 0;
 	}
