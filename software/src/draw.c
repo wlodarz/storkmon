@@ -187,7 +187,7 @@ void draw_print_wind_max(void)
 void draw_addval_temp(int y)
 {
 	draw_st.new_temp = y;
-	if (y > draw_st.temp_max) {
+	if (y >= draw_st.temp_max) {
 		draw_st.temp_max = y;
 		draw_print_temp_max();
 	}
@@ -198,7 +198,7 @@ void draw_addval_temp(int y)
 void draw_addval_wind(int y)
 {
 	draw_st.new_windspeed = y;
-	if (y > draw_st.wind_max) {
+	if (y >= draw_st.wind_max) {
 		draw_st.wind_max = y;
 		draw_print_wind_max();
 	}
@@ -211,24 +211,25 @@ void draw_update(void)
 	int x;
 	int tval, wval;
 	UInt16 current_seconds;
+	UInt16 x_range_marigin = 9;
+	UInt16 x_range = 25;
+	UInt16 seconds_per_range = 20;
+	int x_data_scale = 1;
+	int max_timelines = 6;
+	char msg[30];
+	int i;
 
 	draw_constant();
 
 	if (!draw_st.first_temp_set && !draw_st.first_wind_set) {
 		RectangleType rect;
 		UInt16 cornerDiam = 0;
-		char msg[30];
 
 		rect.topLeft.x = 0;
 		rect.topLeft.y = 0;
 		rect.extent.x = 160;
 		rect.extent.y = 20;
 		WinEraseRectangle(&rect, cornerDiam);
-
-		sprintf(msg, "4m  2m  1m");
-		WinDrawChars(msg, strlen(msg), draw_st.x_marigin + 10, 0);
-		sprintf(msg, "3        2        1");
-		WinDrawChars(msg, strlen(msg), draw_st.x_marigin + 10, 10);
 	}
 
 	if (!draw_st.first_temp_set) {
@@ -307,14 +308,20 @@ void draw_update(void)
 	draw_st.windspeed_table[(x+draw_st.start_index)%draw_st.max_value_index] = draw_st.new_windspeed;
 
 	// TODO: ADD TIMELINES
-	WinDrawLine(draw_st.x_marigin + draw_st.graph_width,  draw_st.y_marigin, 
-	            draw_st.x_marigin + draw_st.graph_width,  draw_st.y_marigin + draw_st.screen_height);
-	WinDrawLine(draw_st.x_marigin + draw_st.graph_width - 40,  draw_st.y_marigin, 
-	            draw_st.x_marigin + draw_st.graph_width - 40,  draw_st.y_marigin + draw_st.screen_height);
-	WinDrawLine(draw_st.x_marigin + draw_st.graph_width - 80,  draw_st.y_marigin, 
-	            draw_st.x_marigin + draw_st.graph_width - 80,  draw_st.y_marigin + draw_st.screen_height);
-	WinDrawLine(draw_st.x_marigin + draw_st.graph_width - 120,  draw_st.y_marigin, 
-	            draw_st.x_marigin + draw_st.graph_width - 120,  draw_st.y_marigin + draw_st.screen_height);
+	for(i=0; i<max_timelines; i++) {
+		sprintf(msg, "%d", (i) * seconds_per_range);
+		WinDrawChars(msg, strlen(msg), draw_st.x_marigin + draw_st.graph_width - (i*x_range) - 4, 10);
+
+		WinDrawLine(draw_st.x_marigin + draw_st.graph_width - (i*x_range),  draw_st.y_marigin, 
+	            	draw_st.x_marigin + draw_st.graph_width - (i*x_range),  draw_st.y_marigin + draw_st.screen_height);
+	}
+
+	//WinDrawLine(draw_st.x_marigin + draw_st.graph_width - 40,  draw_st.y_marigin, 
+	//            draw_st.x_marigin + draw_st.graph_width - 40,  draw_st.y_marigin + draw_st.screen_height);
+	//WinDrawLine(draw_st.x_marigin + draw_st.graph_width - 80,  draw_st.y_marigin, 
+	//            draw_st.x_marigin + draw_st.graph_width - 80,  draw_st.y_marigin + draw_st.screen_height);
+	//WinDrawLine(draw_st.x_marigin + draw_st.graph_width - 120,  draw_st.y_marigin, 
+	//            draw_st.x_marigin + draw_st.graph_width - 120,  draw_st.y_marigin + draw_st.screen_height);
 
 	// move start index
 	draw_st.start_index = (draw_st.start_index + 1) % draw_st.max_value_index;
