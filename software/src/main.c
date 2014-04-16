@@ -70,7 +70,6 @@ static Boolean hardwareButtonsHandler(EventPtr event) {
 		switch(event->data.keyDown.chr) {
 			case vchrPageUp:
 				handled = 1;
-				//FrmAlert(alertID_up);
 				draw_inc_limit();
 				break;
 			case vchrPageDown:
@@ -140,11 +139,15 @@ static void EventLoop(void) {
 		//EvtGetEvent(&event, -1);
 		EvtGetEvent(&event, 50);
 
+#if 0
 		if (TimGetSeconds() - lastResetTime > 30) {
 			if (autooff_counter < ((40-1) * 2)) EvtResetAutoOffTimer();
 			autooff_counter++;
 			lastResetTime = TimGetSeconds();
 		}
+#else
+		EvtResetAutoOffTimer();
+#endif
 
 		if(hardwareButtonsHandler(&event)) continue;
 		if(SysHandleEvent(&event)) continue;

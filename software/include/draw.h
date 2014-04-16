@@ -18,7 +18,9 @@
 #define NUM_VAL_LEN 8
 
 #define SINGLE_WIND_STEP 100
-#define SINGLE_TEMP_STEP 100
+#define SINGLE_TEMP_STEP 50
+#define SINGLE_WIND_DIVIDER 100
+#define SINGLE_TEMP_DIVIDER 100
 
 #define LIMIT_WIDTH 25
 #define LIMIT_HEIGHT 15
@@ -27,6 +29,7 @@
 #define LIMIT_WIND_MIN 2
 #define LIMIT_TEMP_MAX 3
 #define LIMIT_TEMP_MIN 4
+#define LIMIT_TIME     5
 
 #define LIMIT_TEMP_MAX_X (draw_st.screen_width - LIMIT_WIDTH - 1)
 #define LIMIT_TEMP_MAX_Y (draw_st.y_marigin + NUMERIC_VALUES_Y_MAX_MARIGIN - 2)
