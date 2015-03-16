@@ -1,0 +1,1 @@
+The application reads data from custom ZigBee enabled sensors, and displays them on PalmPilot display.
